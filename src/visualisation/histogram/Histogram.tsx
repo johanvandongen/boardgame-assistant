@@ -1,64 +1,18 @@
 import styled from "styled-components";
-// import { HistogramOptions, VisOptionsFactory } from "../VisOptions";
 import { FrequencyCounter } from "./FrequencyCounter";
 import { HistogramOptions, HistogramOptionsFactory } from "./HistOptions";
+import { Rect } from "../Rect";
+import { HorizontalAxisLabel, VerticalAxisLabel } from "../axis";
 
-export interface IHistogramProps {
-    values: number[];
-    histogramOptions?: HistogramOptions;
-}
-
-export function Rect({
-    x,
-    y,
-    width,
-    height,
-}: {
+export interface ICategoryLabelProps {
+    histOptions: HistogramOptions;
     x: number;
-    y: number;
-    width: number;
-    height: number;
-}) {
-    return (
-        <svg key={x.toString() + y.toString()}>
-            <rect width={width} height={height} x={x} y={y} fill="#418cf0"></rect>
-        </svg>
-    );
+    label: string;
 }
 
-const CreateHorizontalAxis = (histOptions: HistogramOptions, label: string) => {
+function CategoryLabel({ histOptions, x, label }: ICategoryLabelProps) {
     return (
-        <svg key={label}>
-            <text
-                x={histOptions.width / 2}
-                y={histOptions.height}
-                textAnchor="middle"
-                fontSize={histOptions.axisFontSize}
-            >
-                {label}
-            </text>
-        </svg>
-    );
-};
-const CreateVerticalAxis = (histOptions: HistogramOptions, label: string) => {
-    return (
-        <svg key={label}>
-            <text
-                x={0}
-                y={histOptions.height / 2}
-                textAnchor="middle"
-                fontSize={histOptions.axisFontSize}
-                transform={`translate(${-histOptions.height / 2 + histOptions.axisFontSize}, ${histOptions.height / 2}) rotate(270)`}
-            >
-                {label}
-            </text>
-        </svg>
-    );
-};
-
-const CreateCategoryLabel = (histOptions: HistogramOptions, x: number, label: string) => {
-    return (
-        <svg key={label}>
+        <svg>
             <text
                 x={x}
                 y={histOptions.height - histOptions.axisHorizontalMargin}
@@ -70,16 +24,18 @@ const CreateCategoryLabel = (histOptions: HistogramOptions, x: number, label: st
             </text>
         </svg>
     );
-};
+}
 
-const CreateFrequencyLabel = (
-    histOptions: HistogramOptions,
-    x: number,
-    barHeight: number,
-    label: string
-) => {
+export interface IFrequencyLabelProps {
+    histOptions: HistogramOptions;
+    x: number;
+    barHeight: number;
+    label: string;
+}
+
+function FrequencyLabel({ histOptions, x, barHeight, label }: IFrequencyLabelProps) {
     return (
-        <svg key={label + x.toString()}>
+        <svg>
             <text
                 x={x}
                 y={
@@ -96,56 +52,61 @@ const CreateFrequencyLabel = (
             </text>
         </svg>
     );
-};
+}
 
-const CreateHistogram = (freq: FrequencyCounter, histOptions: HistogramOptions) => {
+const CreateHistogram = (freq: FrequencyCounter, ho: HistogramOptions) => {
     const histElements: JSX.Element[] = [];
     const nrOfBars = freq.nrOfElements;
-    const spacing = histOptions.barSpacing;
-    const barWidth =
-        (histOptions.width - histOptions.axisVerticalMargin - (nrOfBars + 1) * spacing) / nrOfBars;
+    const barWidth = (ho.width - ho.axisVerticalMargin - (nrOfBars + 1) * ho.barSpacing) / nrOfBars;
     const maxBarHeight =
-        histOptions.height -
-        histOptions.axisHorizontalMargin -
-        histOptions.barCategoryFontHeight -
-        histOptions.barFrequencyHeight;
+        ho.height - ho.axisHorizontalMargin - ho.barCategoryFontHeight - ho.barFrequencyHeight;
     let barCounter = 0;
+
     for (const key in freq.frequencies) {
         const barHeight = (freq.frequencies[key] / freq.max) * maxBarHeight;
         const xOffset =
-            histOptions.axisVerticalMargin + spacing + barCounter * (barWidth + spacing);
+            ho.axisVerticalMargin + ho.barSpacing + barCounter * (barWidth + ho.barSpacing);
+        const yOffset = ho.height - barHeight - ho.axisHorizontalMargin - ho.barCategoryFontHeight;
+
         histElements.push(
             <Rect
                 x={xOffset}
-                y={
-                    histOptions.height -
-                    barHeight -
-                    histOptions.axisHorizontalMargin -
-                    histOptions.barCategoryFontHeight
-                }
+                y={yOffset}
                 width={barWidth}
                 height={barHeight}
-                key={key + freq.frequencies[key].toString() + "rect"}
+                key={key + "rect"}
             ></Rect>
         );
-        histElements.push(CreateCategoryLabel(histOptions, xOffset + barWidth / 2, key));
-
+        histElements.push(
+            <CategoryLabel
+                histOptions={ho}
+                x={xOffset + barWidth / 2}
+                label={key}
+                key={key + "cat"}
+            />
+        );
         if (freq.frequencies[key] != 0) {
+            const label = freq.frequencies[key].toString();
             histElements.push(
-                CreateFrequencyLabel(
-                    histOptions,
-                    xOffset + barWidth / 2,
-                    barHeight,
-                    freq.frequencies[key].toString()
-                )
+                <FrequencyLabel
+                    histOptions={ho}
+                    x={xOffset + barWidth / 2}
+                    barHeight={barHeight}
+                    label={label}
+                    key={key + "freqlabel"}
+                />
             );
         }
+
         barCounter += 1;
     }
-    histElements.push(CreateHorizontalAxis(histOptions, "Dice"));
-    histElements.push(CreateVerticalAxis(histOptions, "Frequency"));
     return histElements;
 };
+
+export interface IHistogramProps {
+    values: number[];
+    histogramOptions?: HistogramOptions;
+}
 
 export function Histogram({ values, histogramOptions }: IHistogramProps) {
     const freq = new FrequencyCounter(
@@ -161,6 +122,12 @@ export function Histogram({ values, histogramOptions }: IHistogramProps) {
         <Border>
             <svg viewBox={`0 0 ${histogramOptions.width} ${histogramOptions.height}`}>
                 {histogram}
+                <HorizontalAxisLabel histOptions={histogramOptions} label={"Dice"} key={"Dice"} />
+                <VerticalAxisLabel
+                    histOptions={histogramOptions}
+                    label={"Frequency"}
+                    key={"Frequency"}
+                />
             </svg>
         </Border>
     );
