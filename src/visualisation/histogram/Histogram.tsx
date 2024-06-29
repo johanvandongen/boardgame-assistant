@@ -1,30 +1,11 @@
 import * as React from "react";
 import styled from "styled-components";
 import { HistogramOptions } from "../VisOptions";
+import { FrequencyCounter } from "./FrequencyCounter";
 
 export interface IHistogramProps {
     values: number[];
 }
-
-const GetFrequencyCount = (values: number[]) => {
-    const d: { [k: string]: number } = {};
-    for (const val of values) {
-        if (!(val in d)) {
-            d[val] = 1;
-        } else {
-            d[val] += 1;
-        }
-    }
-    return d;
-};
-
-// const Circle = () => {
-//     return (
-//         <svg viewBox="0 0 100 50">
-//             <circle cx="10" cy="10" r="10" />
-//         </svg>
-//     );
-// };
 
 export function Rect({
     x,
@@ -116,9 +97,9 @@ const CreateFrequencyLabel = (
     );
 };
 
-const CreateHistogram = (freq: { [k: string]: number }, histOptions: HistogramOptions) => {
+const CreateHistogram = (freq: FrequencyCounter, histOptions: HistogramOptions) => {
     const histElements: JSX.Element[] = [];
-    const nrOfBars = 11;
+    const nrOfBars = freq.nrOfElements;
     const spacing = histOptions.barSpacing;
     const barWidth =
         (histOptions.width - histOptions.axisVerticalMargin - (nrOfBars + 1) * spacing) / nrOfBars;
@@ -127,11 +108,11 @@ const CreateHistogram = (freq: { [k: string]: number }, histOptions: HistogramOp
         histOptions.axisHorizontalMargin -
         histOptions.barCategoryFontHeight -
         histOptions.barFrequencyHeight;
-    for (const key in freq) {
-        console.log(freq[key]);
-        const barHeight = (freq[key] / 13) * maxBarHeight;
+    let barCounter = 0;
+    for (const key in freq.frequencies) {
+        const barHeight = (freq.frequencies[key] / freq.max) * maxBarHeight;
         const xOffset =
-            histOptions.axisVerticalMargin + spacing + (parseInt(key) - 2) * (barWidth + spacing);
+            histOptions.axisVerticalMargin + spacing + barCounter * (barWidth + spacing);
         histElements.push(
             <Rect
                 x={xOffset}
@@ -143,17 +124,22 @@ const CreateHistogram = (freq: { [k: string]: number }, histOptions: HistogramOp
                 }
                 width={barWidth}
                 height={barHeight}
+                key={key + freq.frequencies[key].toString() + "rect"}
             ></Rect>
         );
         histElements.push(CreateCategoryLabel(histOptions, xOffset + barWidth / 2, key));
-        histElements.push(
-            CreateFrequencyLabel(
-                histOptions,
-                xOffset + barWidth / 2,
-                barHeight,
-                freq[key].toString()
-            )
-        );
+
+        if (freq.frequencies[key] != 0) {
+            histElements.push(
+                CreateFrequencyLabel(
+                    histOptions,
+                    xOffset + barWidth / 2,
+                    barHeight,
+                    freq.frequencies[key].toString()
+                )
+            );
+        }
+        barCounter += 1;
     }
     histElements.push(CreateHorizontalAxis(histOptions, "Dice"));
     histElements.push(CreateVerticalAxis(histOptions, "Frequency"));
@@ -161,9 +147,10 @@ const CreateHistogram = (freq: { [k: string]: number }, histOptions: HistogramOp
 };
 
 export function Histogram({ values }: IHistogramProps) {
-    const freq: { [k: string]: number } = GetFrequencyCount(values);
-    console.log(freq);
-    console.log(freq.array);
+    const freq = new FrequencyCounter(
+        values,
+        [...Array(11).keys()].map((x) => (x += 1))
+    );
     const width = 600;
     const height = 200;
     const histogramOptions: HistogramOptions = {
@@ -182,11 +169,11 @@ export function Histogram({ values }: IHistogramProps) {
         barCategoryFontHeight: 10,
         barFrequencyHeight: 10,
     };
-    const bars = CreateHistogram(freq, histogramOptions);
+    const histogram = CreateHistogram(freq, histogramOptions);
 
     return (
         <Border>
-            <svg viewBox={`0 0 ${width} ${height}`}>{bars}</svg>
+            <svg viewBox={`0 0 ${width} ${height}`}>{histogram}</svg>
         </Border>
     );
 }
