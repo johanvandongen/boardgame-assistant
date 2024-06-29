@@ -10,10 +10,18 @@ export interface VisOptions {
     axisFontSize: number;
 }
 
-export interface HistogramOptions extends VisOptions {
-    barSpacing: number;
-    barCategoryFontSize: number;
-    barCategoryFontHeight: number;
-    barFrequencyFontSize: number;
-    barFrequencyHeight: number;
+export class VisOptionsFactory {
+    Default(): VisOptions {
+        return {
+            width: 600,
+            height: 200,
+            axisHorizontalMargin: 15,
+            axisVerticalMargin: 10,
+            leftMargin: 0,
+            rightMargin: 0,
+            topMargin: 0,
+            bottomMargin: 0,
+            axisFontSize: 10,
+        };
+    }
 }

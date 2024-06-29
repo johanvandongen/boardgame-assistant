@@ -1,10 +1,11 @@
-import * as React from "react";
 import styled from "styled-components";
-import { HistogramOptions } from "../VisOptions";
+// import { HistogramOptions, VisOptionsFactory } from "../VisOptions";
 import { FrequencyCounter } from "./FrequencyCounter";
+import { HistogramOptions, HistogramOptionsFactory } from "./HistOptions";
 
 export interface IHistogramProps {
     values: number[];
+    histogramOptions?: HistogramOptions;
 }
 
 export function Rect({
@@ -19,7 +20,7 @@ export function Rect({
     height: number;
 }) {
     return (
-        <svg>
+        <svg key={x.toString() + y.toString()}>
             <rect width={width} height={height} x={x} y={y} fill="#418cf0"></rect>
         </svg>
     );
@@ -27,7 +28,7 @@ export function Rect({
 
 const CreateHorizontalAxis = (histOptions: HistogramOptions, label: string) => {
     return (
-        <svg>
+        <svg key={label}>
             <text
                 x={histOptions.width / 2}
                 y={histOptions.height}
@@ -41,7 +42,7 @@ const CreateHorizontalAxis = (histOptions: HistogramOptions, label: string) => {
 };
 const CreateVerticalAxis = (histOptions: HistogramOptions, label: string) => {
     return (
-        <svg>
+        <svg key={label}>
             <text
                 x={0}
                 y={histOptions.height / 2}
@@ -57,7 +58,7 @@ const CreateVerticalAxis = (histOptions: HistogramOptions, label: string) => {
 
 const CreateCategoryLabel = (histOptions: HistogramOptions, x: number, label: string) => {
     return (
-        <svg>
+        <svg key={label}>
             <text
                 x={x}
                 y={histOptions.height - histOptions.axisHorizontalMargin}
@@ -78,7 +79,7 @@ const CreateFrequencyLabel = (
     label: string
 ) => {
     return (
-        <svg>
+        <svg key={label + x.toString()}>
             <text
                 x={x}
                 y={
@@ -146,34 +147,21 @@ const CreateHistogram = (freq: FrequencyCounter, histOptions: HistogramOptions) 
     return histElements;
 };
 
-export function Histogram({ values }: IHistogramProps) {
+export function Histogram({ values, histogramOptions }: IHistogramProps) {
     const freq = new FrequencyCounter(
         values,
-        [...Array(11).keys()].map((x) => (x += 1))
+        [...Array(11).keys()].map((x) => (x += 2))
     );
-    const width = 600;
-    const height = 200;
-    const histogramOptions: HistogramOptions = {
-        width: 600,
-        height: 200,
-        barSpacing: 2,
-        axisHorizontalMargin: 15,
-        axisVerticalMargin: 10,
-        leftMargin: 0,
-        rightMargin: 0,
-        topMargin: 0,
-        bottomMargin: 0,
-        barCategoryFontSize: 10,
-        barFrequencyFontSize: 10,
-        axisFontSize: 10,
-        barCategoryFontHeight: 10,
-        barFrequencyHeight: 10,
-    };
+    if (histogramOptions === undefined) {
+        histogramOptions = new HistogramOptionsFactory().Default();
+    }
     const histogram = CreateHistogram(freq, histogramOptions);
 
     return (
         <Border>
-            <svg viewBox={`0 0 ${width} ${height}`}>{histogram}</svg>
+            <svg viewBox={`0 0 ${histogramOptions.width} ${histogramOptions.height}`}>
+                {histogram}
+            </svg>
         </Border>
     );
 }
