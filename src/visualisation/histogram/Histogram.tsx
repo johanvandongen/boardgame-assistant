@@ -135,5 +135,5 @@ export function Histogram({ values, histogramOptions }: IHistogramProps) {
 
 const Border = styled.div`
     width: 100%;
-    border: 1px solid black;
+    padding: 1rem;
 `;
