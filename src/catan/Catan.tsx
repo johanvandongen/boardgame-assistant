@@ -2,10 +2,10 @@ import * as React from "react";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
-import { RunningDiceStatisTics } from "./RunningDiceStatisics";
 import { styled } from "@mui/material/styles";
 import { useState } from "react";
-import { EmptyPage } from "./EmptyPage";
+import { EmptyPage } from "../EmptyPage";
+import { RunningDiceStatisTics } from "../reusable/RunningDiceStatisics";
 
 export default function TabsWrappedLabel() {
     const [tab, setTab] = useState("DiceDistribution");

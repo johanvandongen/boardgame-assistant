@@ -4,6 +4,7 @@ export interface IRolls {
     data: number[];
 }
 
+/** Shows the last few numbers from a sequence and the number of rolls. */
 export function Rolls({ data }: IRolls) {
     const sequenceLength = 6;
     const nrOfRolls = data.length === 1 ? `${data.length} roll` : `${data.length} rolls`;
@@ -21,7 +22,6 @@ export function Rolls({ data }: IRolls) {
 }
 
 const Container = styled.div`
-    /* height: 2rem; */
     white-space: nowrap;
     font-size: 1.5rem;
     color: #888;

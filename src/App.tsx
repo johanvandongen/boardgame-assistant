@@ -13,7 +13,7 @@ import { styled, alpha } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import { EmptyPage } from "./EmptyPage";
-import Catan from "./Catan";
+import Catan from "./catan/Catan";
 
 function App() {
     type GameItem = {
