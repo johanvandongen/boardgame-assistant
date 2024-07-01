@@ -1,10 +1,10 @@
 import * as React from "react";
-import { Histogram } from "./visualisation/histogram/Histogram";
 import styled from "styled-components";
 import { useState } from "react";
 import { NumberInputButtonGrid } from "./NumberInputButtonGrid";
 import { Rolls } from "./Rolls";
 import { Slider } from "@mui/material";
+import { Histogram } from "../visualisation/histogram/Histogram";
 
 export interface IRunningDiceStatisTicsProps {}
 
