@@ -8,12 +8,8 @@ import { Histogram } from "../visualisation/histogram/Histogram";
 
 export interface IRunningDiceStatisTicsProps {}
 
+/** Shows the dice distribution statistics, with slider, visualisation and number input. */
 export function RunningDiceStatisTics() {
-    // const data = [
-    //     10, 9, 10, 5, 5, 12, 4, 10, 3, 6, 8, 7, 4, 9, 9, 11, 3, 10, 8, 11, 6, 2, 9, 5, 6, 8, 7, 8,
-    //     5, 9, 4, 7, 6, 7, 9, 10, 4, 9, 4, 7, 10, 3, 4, 11, 7, 8, 6, 9, 9, 6, 3, 5, 9, 6, 4, 8, 4,
-    //     10, 9, 10, 7, 2, 7, 5, 7, 6, 8, 9, 5, 8, 4, 9, 11, 8, 6, 10,
-    // ];
     const [data, setData] = useState<number[]>([]);
     const [sliderValue, setSliderValue] = useState<number[]>([1, 1]);
 
@@ -30,11 +26,6 @@ export function RunningDiceStatisTics() {
     };
 
     React.useEffect(() => {
-        // let newMax = sliderValue[1];
-        // if (sliderValue[1] === data.length - 1) {
-        //     newMax = data.length;
-        // }
-        // setSliderValue((prev) => [prev[0], newMax]);
         setSliderValue((prev) =>
             sliderValue[1] >= data.length - 1 ? [prev[0], Math.max(1, data.length)] : prev
         );
@@ -44,7 +35,8 @@ export function RunningDiceStatisTics() {
         <RunningDiceContinaer>
             <SliderContainer>
                 <p>
-                    Dice distribution over rolls: {sliderValue[0]} to {sliderValue[1]}
+                    Dice distribution over rolls:{" "}
+                    {data.length === 0 ? "0 to 0" : sliderValue[0] + " to " + sliderValue[1]}
                 </p>
                 <Slider
                     getAriaLabel={() => "Temperature range"}
@@ -75,7 +67,7 @@ const RunningDiceContinaer = styled.div`
     flex-direction: column;
     align-items: center;
     width: 100%;
-    gap: 2rem;
+    gap: 1rem;
 `;
 
 const SliderContainer = styled.div`

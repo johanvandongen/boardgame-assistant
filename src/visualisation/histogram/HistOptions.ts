@@ -13,10 +13,10 @@ export class HistogramOptionsFactory {
         return {
             ...new VisOptionsFactory().Default(),
             barSpacing: 2,
-            barCategoryFontSize: 10,
-            barFrequencyFontSize: 10,
-            barCategoryFontHeight: 10,
-            barFrequencyHeight: 10,
+            barCategoryFontSize: 15,
+            barFrequencyFontSize: 15,
+            barCategoryFontHeight: 15,
+            barFrequencyHeight: 15,
         };
     }
 }
