@@ -1,3 +1,4 @@
+import { useTheme } from "@mui/material";
 import { VisOptions } from "./VisOptions";
 
 export interface IHorizontalAxisLabelProps {
@@ -7,6 +8,7 @@ export interface IHorizontalAxisLabelProps {
 
 /** Create horizontal axis label centered from the visualisation width */
 export function HorizontalAxisLabel({ histOptions, label }: IHorizontalAxisLabelProps) {
+    const theme = useTheme();
     return (
         <svg>
             <text
@@ -14,6 +16,7 @@ export function HorizontalAxisLabel({ histOptions, label }: IHorizontalAxisLabel
                 y={histOptions.height}
                 textAnchor="middle"
                 fontSize={histOptions.axisFontSize}
+                fill={theme?.palette.text.secondary}
             >
                 {label}
             </text>
@@ -28,6 +31,7 @@ export interface IVerticalAxisLabelProps {
 
 /** Create vertical axis label centered from the visualisation height */
 export function VerticalAxisLabel({ histOptions, label }: IVerticalAxisLabelProps) {
+    const theme = useTheme();
     return (
         <svg>
             <text
@@ -35,6 +39,7 @@ export function VerticalAxisLabel({ histOptions, label }: IVerticalAxisLabelProp
                 y={histOptions.height / 2}
                 textAnchor="middle"
                 fontSize={histOptions.axisFontSize}
+                fill={theme?.palette.text.secondary}
                 transform={`translate(${-histOptions.height / 2 + histOptions.axisFontSize}, ${histOptions.height / 2}) rotate(270)`}
             >
                 {label}
