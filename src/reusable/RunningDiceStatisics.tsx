@@ -21,7 +21,7 @@ export function RunningDiceStatisTics() {
         }
     };
 
-    const handleChange = (event: Event, newValue: number | number[]) => {
+    const handleChange = (_event: Event, newValue: number | number[]) => {
         setSliderValue(newValue as number[]);
     };
 

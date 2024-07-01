@@ -10,7 +10,7 @@ import { RunningDiceStatisTics } from "../reusable/RunningDiceStatisics";
 export default function TabsWrappedLabel() {
     const [tab, setTab] = useState("DiceDistribution");
 
-    const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+    const handleChange = (_event: React.SyntheticEvent, newValue: string) => {
         setTab(newValue);
     };
 

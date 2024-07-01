@@ -59,7 +59,7 @@ function App() {
                                 disablePortal
                                 id="combo-box-demo"
                                 value={game === null ? null : game.label}
-                                onChange={(event: unknown, newValue: string | null) => {
+                                onChange={(_event: unknown, newValue: string | null) => {
                                     // setGame(newValue);
                                     if (newValue === null || newValue === undefined) {
                                         setGame(null);
@@ -71,7 +71,7 @@ function App() {
                                     }
                                 }}
                                 inputValue={inputValue}
-                                onInputChange={(event, newInputValue) => {
+                                onInputChange={(_event, newInputValue) => {
                                     setInputValue(newInputValue);
                                 }}
                                 renderInput={(params) => {
