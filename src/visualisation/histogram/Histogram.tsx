@@ -63,7 +63,7 @@ const CreateHistogram = (freq: FrequencyCounter, ho: HistogramOptions) => {
     let barCounter = 0;
 
     for (const key in freq.frequencies) {
-        const barHeight = (freq.frequencies[key] / freq.max) * maxBarHeight;
+        const barHeight = freq.max === 0 ? 0 : (freq.frequencies[key] / freq.max) * maxBarHeight;
         const xOffset =
             ho.axisVerticalMargin + ho.barSpacing + barCounter * (barWidth + ho.barSpacing);
         const yOffset = ho.height - barHeight - ho.axisHorizontalMargin - ho.barCategoryFontHeight;
@@ -135,5 +135,5 @@ export function Histogram({ values, histogramOptions }: IHistogramProps) {
 
 const Border = styled.div`
     width: 100%;
-    padding: 1rem;
+    /* padding: 1rem; */
 `;
