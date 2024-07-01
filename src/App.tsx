@@ -1,6 +1,5 @@
 import { useState } from "react";
 import "./App.css";
-import { RunningDiceStatisTics } from "./RunningDiceStatisics";
 import {
     AppBar,
     Autocomplete,
@@ -14,6 +13,7 @@ import { styled, alpha } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import { EmptyPage } from "./EmptyPage";
+import Catan from "./Catan";
 
 function App() {
     type GameItem = {
@@ -22,7 +22,7 @@ function App() {
     };
 
     const gameItems: GameItem[] = [
-        { label: "catan", component: <RunningDiceStatisTics /> },
+        { label: "catan", component: <Catan /> },
         { label: "risk", component: null },
     ];
 
