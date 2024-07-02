@@ -1,7 +1,12 @@
-import { styled } from "@mui/material/styles";
+import { styled, useTheme } from "@mui/material/styles";
 
 export function EmptyPage() {
-    return <EmptyPageContainer>Wow such empty..</EmptyPageContainer>;
+    const theme = useTheme();
+    return (
+        <EmptyPageContainer sx={{ color: theme.palette.text.secondary }}>
+            Wow such empty..
+        </EmptyPageContainer>
+    );
 }
 
 const EmptyPageContainer = styled("div")(() => ({
