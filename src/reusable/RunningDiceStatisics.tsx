@@ -22,6 +22,10 @@ export function RunningDiceStatisTics() {
         }
     };
 
+    const clear = () => {
+        setData([]);
+    };
+
     const handleChange = (_event: Event, newValue: number | number[]) => {
         setSliderValue(newValue as number[]);
     };
@@ -67,7 +71,7 @@ export function RunningDiceStatisTics() {
                 <Histogram values={data.slice(sliderValue[0] - 1, sliderValue[1])} />
             </VisualisationContainer>
             <Rolls data={data.slice(sliderValue[0] - 1, sliderValue[1])} />
-            <NumberInputButtonGrid addNumber={addNumber} />
+            <NumberInputButtonGrid addNumber={addNumber} clear={clear} />
         </RunningDiceContinaer>
     );
 }
