@@ -4,14 +4,15 @@ import { NumberInputButtonGrid } from "./NumberInputButtonGrid";
 import { Rolls } from "./Rolls";
 import { Slider, styled, useTheme } from "@mui/material";
 import { Histogram } from "../visualisation/histogram/Histogram";
+import { getHistogramData, getHistorgramSliderData } from "./HistogramData";
 
 export interface IRunningDiceStatisTicsProps {}
 
 /** Shows the dice distribution statistics, with slider, visualisation and number input. */
 export function RunningDiceStatisTics() {
     const theme = useTheme();
-    const [data, setData] = useState<number[]>([]);
-    const [sliderValue, setSliderValue] = useState<number[]>([1, 1]);
+    const [data, setData] = useState<number[]>(getHistogramData);
+    const [sliderValue, setSliderValue] = useState<number[]>(getHistorgramSliderData(data));
 
     const addNumber = (num: number) => {
         if (num === -1) {
@@ -21,15 +22,27 @@ export function RunningDiceStatisTics() {
         }
     };
 
+    const clear = () => {
+        setData([]);
+    };
+
     const handleChange = (_event: Event, newValue: number | number[]) => {
         setSliderValue(newValue as number[]);
     };
 
     React.useEffect(() => {
         setSliderValue((prev) =>
-            sliderValue[1] >= data.length - 1 ? [prev[0], Math.max(1, data.length)] : prev
+            prev[1] >= data.length - 1 ? [prev[0], Math.max(1, data.length)] : prev
         );
     }, [data]);
+
+    React.useEffect(() => {
+        localStorage.setItem("histogramData", JSON.stringify(data));
+    }, [data]);
+
+    React.useEffect(() => {
+        localStorage.setItem("histogramSliderData", JSON.stringify(sliderValue));
+    }, [sliderValue]);
 
     return (
         <RunningDiceContinaer>
@@ -58,7 +71,7 @@ export function RunningDiceStatisTics() {
                 <Histogram values={data.slice(sliderValue[0] - 1, sliderValue[1])} />
             </VisualisationContainer>
             <Rolls data={data.slice(sliderValue[0] - 1, sliderValue[1])} />
-            <NumberInputButtonGrid addNumber={addNumber} />
+            <NumberInputButtonGrid addNumber={addNumber} clear={clear} />
         </RunningDiceContinaer>
     );
 }
