@@ -11,7 +11,7 @@ export function BoardGenerator() {
     const [rotation, setRotation] = React.useState<0 | 90>(90);
 
     const toggleRotation = () => {
-        if (rotation === 0) {
+        if (rotation === 0 || dummy === -1) {
             setRotation(90);
         } else {
             setRotation(0);
