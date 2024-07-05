@@ -4,8 +4,8 @@ import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
 import { styled } from "@mui/material/styles";
 import { useState } from "react";
-import { EmptyPage } from "../EmptyPage";
 import { RunningDiceStatisTics } from "../reusable/RunningDiceStatisics";
+import { BoardGenerator } from "./BoardGenerator";
 
 export default function TabsWrappedLabel() {
     const [tab, setTab] = useState("DiceDistribution");
@@ -22,7 +22,7 @@ export default function TabsWrappedLabel() {
                     <Tab value="DiceDistribution" label="Dice Distribution" />
                 </Tabs>
             </Box>
-            {tab === "BoardGenerator" && <EmptyPage />}
+            {tab === "BoardGenerator" && <BoardGenerator />}
             {tab === "DiceDistribution" && <RunningDiceStatisTics />}
         </CatanContainer>
     );

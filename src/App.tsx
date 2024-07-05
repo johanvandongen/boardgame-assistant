@@ -14,8 +14,13 @@ import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import { EmptyPage } from "./EmptyPage";
 import Catan from "./catan/Catan";
+import { useTheme } from "@mui/material/styles";
+import Brightness4Icon from "@mui/icons-material/Brightness4";
+import Brightness7Icon from "@mui/icons-material/Brightness7";
+import React from "react";
+import { ColorModeContext } from "./ThemeContext";
 
-function App() {
+export default function App() {
     type GameItem = {
         label: string;
         component: JSX.Element | null;
@@ -28,6 +33,8 @@ function App() {
 
     const [game, setGame] = useState<GameItem | null>(gameItems[0]);
     const [inputValue, setInputValue] = useState("");
+    const theme = useTheme();
+    const colorMode = React.useContext(ColorModeContext);
 
     return (
         <PageWrapper>
@@ -39,9 +46,20 @@ function App() {
                             edge="start"
                             color="inherit"
                             aria-label="open drawer"
-                            sx={{ mr: 2 }}
+                            // sx={{ mr: 2 }}
                         >
                             <MenuIcon />
+                        </IconButton>
+                        <IconButton
+                            // sx={{ ml: 1 }}
+                            onClick={colorMode.toggleColorMode}
+                            color="inherit"
+                        >
+                            {theme.palette.mode === "dark" ? (
+                                <Brightness7Icon />
+                            ) : (
+                                <Brightness4Icon />
+                            )}
                         </IconButton>
                         <Typography
                             variant="h6"
@@ -93,10 +111,10 @@ function App() {
 
 const PageWrapper = styled("div")(() => ({
     width: "100%",
-    height: "100%",
+    minHeight: "100vh",
     display: "flex",
     flexDirection: "column",
-    justifyContent: "center",
+    // justifyContent: "center",
     alignItems: "center",
 }));
 
@@ -141,5 +159,3 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
         },
     },
 }));
-
-export default App;

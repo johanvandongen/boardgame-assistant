@@ -1,3 +1,5 @@
+import { useTheme } from "@mui/material";
+
 export function Rect({
     x,
     y,
@@ -9,9 +11,16 @@ export function Rect({
     width: number;
     height: number;
 }) {
+    const theme = useTheme();
     return (
         <svg key={x.toString() + y.toString()}>
-            <rect width={width} height={height} x={x} y={y} fill="#418cf0"></rect>
+            <rect
+                width={width}
+                height={height}
+                x={x}
+                y={y}
+                fill={theme?.palette.primary.main}
+            ></rect>
         </svg>
     );
 }

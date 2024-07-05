@@ -3,6 +3,7 @@ import { FrequencyCounter } from "./FrequencyCounter";
 import { HistogramOptions, HistogramOptionsFactory } from "./HistOptions";
 import { Rect } from "../Rect";
 import { HorizontalAxisLabel, VerticalAxisLabel } from "../axis";
+import { useTheme } from "@mui/material";
 
 export interface ICategoryLabelProps {
     histOptions: HistogramOptions;
@@ -11,13 +12,14 @@ export interface ICategoryLabelProps {
 }
 
 function CategoryLabel({ histOptions, x, label }: ICategoryLabelProps) {
+    const theme = useTheme();
     return (
         <svg>
             <text
                 x={x}
                 y={histOptions.height - histOptions.axisHorizontalMargin}
                 textAnchor="middle"
-                // dominantBaseline="middle"
+                fill={theme?.palette.text.secondary}
                 fontSize={histOptions.barCategoryFontSize}
             >
                 {label}
@@ -34,6 +36,7 @@ export interface IFrequencyLabelProps {
 }
 
 function FrequencyLabel({ histOptions, x, barHeight, label }: IFrequencyLabelProps) {
+    const theme = useTheme();
     return (
         <svg>
             <text
@@ -45,6 +48,7 @@ function FrequencyLabel({ histOptions, x, barHeight, label }: IFrequencyLabelPro
                     histOptions.axisHorizontalMargin -
                     histOptions.barCategoryFontHeight
                 }
+                fill={theme?.palette.text.secondary}
                 textAnchor="middle"
                 fontSize={histOptions.barFrequencyFontSize}
             >
