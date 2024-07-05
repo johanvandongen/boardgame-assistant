@@ -2,9 +2,24 @@ import { Intersection, Terrain, Tile, TilePosition } from "../CatanBoard";
 
 export abstract class CatanRandomizer {
     intersections: Intersection[];
+
+    // Hyperparameters;
+    matchingTerrain: number = 0;
+    matchingNumbers: number = 0;
+    mathcingRedNumbers: number = 0;
+    pipRange: number[];
+
     abstract randomize(tiles: Tile[][], robberIndex: number[]): Tile[][];
-    constructor(intersections: Intersection[]) {
+    constructor(
+        intersections: Intersection[],
+        matchingTerrain: number = 0,
+        mathcingRedNumbers: number = 0,
+        pipRange: number[] = [1, 15]
+    ) {
         this.intersections = intersections;
+        this.matchingTerrain = matchingTerrain;
+        this.mathcingRedNumbers = mathcingRedNumbers;
+        this.pipRange = pipRange;
     }
 
     // List of tilepositions. When following this, we form intersections quickly.
@@ -30,7 +45,8 @@ export abstract class CatanRandomizer {
         { row: 4, col: 1 },
         { row: 4, col: 2 },
     ];
-    hasDuplicateTerrain(tiles: Tile[][], threshold = 0) {
+
+    numberOfTerrainMatches(tiles: Tile[][]): number {
         let cnt = 0;
         for (const intersection of this.intersections) {
             const seenTerrain: Terrain[] = [];
@@ -43,7 +59,7 @@ export abstract class CatanRandomizer {
                 seenTerrain.push(t);
             }
         }
-        return cnt <= threshold;
+        return cnt;
     }
     getTerrain(): Terrain[] {
         return [

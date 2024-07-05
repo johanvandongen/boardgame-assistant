@@ -41,6 +41,14 @@ export function BoardGenerator() {
             >
                 Numbers
             </Button>
+            <Button
+                onClick={() => {
+                    c.Randomize();
+                    setDummy((prev) => (prev += 1));
+                }}
+            >
+                Both
+            </Button>
         </BoardGeneratorContainer>
     );
 }

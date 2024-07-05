@@ -1,6 +1,7 @@
 import { CatanRandomizer } from "./randomizer/CatanRandomizer";
-import { RandomNumbers } from "./randomizer/RandomNumberRandomizer";
-import { RandomTerrain, TerrainNoDuplicateBackTrack, TerrainNoDuplicateBackTrack, TerrainNoDuplicateBruteForce } from "./randomizer/RandomTiles";
+import { RandomNumbers } from "./randomizer/numbers/RandomNumberRandomizer";
+import { RandomTerrain } from "./randomizer/terrain/RandomTerrain";
+import { TerrainNoDuplicateBackTrack } from "./randomizer/terrain/TerrainNoMatchingBackTrack";
 
 export class CatanBoardTiles {
     tiles: Tile[][] = [];
@@ -42,7 +43,7 @@ export class CatanBoardTiles {
         );
         this.SetIntersections();
         this.numberRandomizer = new RandomNumbers(this.intersections);
-        this.terrainRandomizer = new TerrainNoDuplicateBackTrack(this.intersections);
+        this.terrainRandomizer = new TerrainNoDuplicateBackTrack(this.intersections, 1);
         this.tiles = this.terrainRandomizer.randomize(this.tiles, this.robberIndex);
         this.tiles = this.numberRandomizer.randomize(this.tiles, this.robberIndex);
     }
@@ -82,6 +83,29 @@ export class CatanBoardTiles {
                 );
             }
         }
+    }
+
+    SetNumberRandomizer(choice: number) {
+        switch (choice) {
+            case 1:
+                this.numberRandomizer = new RandomNumbers(this.intersections);
+                break;
+        }
+    }
+
+    SetTerrainRandomizer(choice: number) {
+        switch (choice) {
+            case 1:
+                this.terrainRandomizer = new RandomTerrain(this.intersections);
+                break;
+            case 2:
+                this.terrainRandomizer = new TerrainNoDuplicateBackTrack(this.intersections);
+        }
+    }
+
+    Randomize() {
+        this.RandomizeTerrain();
+        this.RandomizeNumbers();
     }
 
     RandomizeNumbers() {

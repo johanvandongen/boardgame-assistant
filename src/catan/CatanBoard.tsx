@@ -1,5 +1,6 @@
 import * as React from "react";
 import { CatanBoardTiles, Tile } from "./CatanBoard.ts";
+import { useTheme } from "@mui/material";
 
 export interface ICatanBoardProps {
     catanBoard: CatanBoardTiles;
@@ -113,6 +114,11 @@ export interface IHexProps {
 
 export function Hex({ x, y, tileSize, color, rotataton }: IHexProps) {
     const [a, b, size] = GetHexGeom(tileSize);
+    const theme = useTheme();
+    const blendWithBackground = true;
+    const strokeColor = blendWithBackground
+        ? theme.palette.background.default
+        : theme.palette.text.primary;
 
     let points;
     if (rotataton === undefined || rotataton === 0) {
@@ -122,7 +128,7 @@ export function Hex({ x, y, tileSize, color, rotataton }: IHexProps) {
     }
     return (
         <svg>
-            <polygon points={points} fill={color} stroke="black" />
+            <polygon points={points} fill={color} stroke={strokeColor} />
         </svg>
     );
 }

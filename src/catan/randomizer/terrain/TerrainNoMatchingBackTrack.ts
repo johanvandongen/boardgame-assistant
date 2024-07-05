@@ -1,47 +1,7 @@
-import { Terrain, Tile, TilePosition } from "../CatanBoard";
-import { CatanRandomizer } from "./CatanRandomizer";
-import { shuffle } from "../../utils/Shuffle";
-
-export class RandomTerrain extends CatanRandomizer {
-    randomize(tiles: Tile[][], robberIndex: number[]): Tile[][] {
-        const tokens: Terrain[] = this.getTerrain();
-        const newTiles: Tile[][] = [];
-        for (let row = 0; row < tiles.length; row++) {
-            const tileRow: Tile[] = [];
-            for (let col = 0; col < tiles[row].length; col++) {
-                if (row === robberIndex[0] && col === robberIndex[1]) {
-                    tiles[row][col].token = 0;
-                    tileRow.push(tiles[row][col].copyWithTerrain(Terrain.DESSERT));
-                } else {
-                    const randomToken = tokens[Math.floor(Math.random() * tokens.length)];
-                    const index = tokens.indexOf(randomToken);
-                    tokens.splice(index, 1);
-                    tileRow.push(tiles[row][col].copyWithTerrain(randomToken));
-                }
-            }
-            newTiles.push(tileRow);
-        }
-        return newTiles;
-    }
-}
-
-export class TerrainNoDuplicateBruteForce extends CatanRandomizer {
-    // Brute force
-    randomize(tiles: Tile[][], robberIndex: number[]): Tile[][] {
-        let k = 1;
-        const randomizer = new RandomTerrain(this.intersections);
-        let newTiles = randomizer.randomize(tiles, robberIndex);
-        while (k < 1000) {
-            if (!this.hasDuplicateTerrain(newTiles, 0)) {
-                return newTiles;
-            }
-            console.log("try", k);
-            newTiles = randomizer.randomize(tiles, robberIndex);
-            k += 1;
-        }
-        return newTiles;
-    }
-}
+import { Terrain, Tile, TilePosition } from "../../CatanBoard";
+import { CatanRandomizer } from "../CatanRandomizer";
+import { shuffle } from "../../../utils/Shuffle";
+import { RandomTerrain } from "./RandomTerrain";
 
 export class TerrainNoDuplicateBackTrack extends CatanRandomizer {
     solve(
@@ -77,7 +37,7 @@ export class TerrainNoDuplicateBackTrack extends CatanRandomizer {
                 continue;
             }
             tiles[pos.row][pos.col].terrain = tile;
-            if (!this.hasDuplicateTerrain(tiles, 0)) {
+            if (this.numberOfTerrainMatches(tiles) > this.matchingTerrain) {
                 tiles[pos.row][pos.col].terrain = Terrain.DESSERT;
                 continue;
             }

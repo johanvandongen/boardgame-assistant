@@ -1,5 +1,5 @@
-import { Tile } from "../CatanBoard";
-import { CatanRandomizer } from "./CatanRandomizer";
+import { Tile } from "../../CatanBoard";
+import { CatanRandomizer } from "../CatanRandomizer";
 
 export class RandomNumbers extends CatanRandomizer {
     randomize(tiles: Tile[][], robberIndex: number[]): Tile[][] {
