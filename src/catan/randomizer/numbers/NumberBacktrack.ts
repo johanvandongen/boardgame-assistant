@@ -44,7 +44,7 @@ export class NumberBacktrack extends CatanRandomizer {
         return result;
     }
 
-    // Back track
+    // DONT USE - works correct but if no (or few) solution exists it takes forever to finish, still need to timeout this function
     randomize(tiles: Tile[][], robberIndex: number[]): [Tile[][], boolean] {
         const b = new RandomNumbers(this.intersections).randomize(tiles, robberIndex);
         const newTiles: Tile[][] = [];
