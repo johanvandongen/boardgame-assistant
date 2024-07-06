@@ -1,21 +1,25 @@
 import {
+    Alert,
     Button,
     Checkbox,
+    Collapse,
     FormControl,
     FormControlLabel,
     FormGroup,
+    IconButton,
     InputLabel,
     MenuItem,
+    Popover,
     Select,
     SelectChangeEvent,
     Slider,
     styled,
     Typography,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import * as React from "react";
 import { CatanBoard } from "./CatanBoard.tsx";
 import { CatanBoardTiles } from "./CatanBoard.ts";
-import { getRandomItem } from "../utils/Shuffle.ts";
 
 export interface IBoardGeneratorProps {}
 function valuetext(value: number) {
@@ -25,12 +29,24 @@ const c = new CatanBoardTiles(20);
 const minDistance = 3;
 export function BoardGenerator() {
     const [dummy, setDummy] = React.useState(0);
+    const [showNotification, setShowNotification] = React.useState(false);
     const [showMore, setShowMore] = React.useState(true);
     const [terrainTouch, setTerrainTouch] = React.useState(false);
     const [redNumberTouch, setRedNumberTouch] = React.useState(false);
     const [pipRange, setPipRange] = React.useState<number[]>([1, 15]);
     const [robberPlace, setRobberPlace] = React.useState<string>("Inner");
     const [rotation, setRotation] = React.useState<0 | 90>(90);
+    const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
+
+    const handlePopoverOpen = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handlePopoverClose = () => {
+        setAnchorEl(null);
+    };
+
+    const open = Boolean(anchorEl);
 
     const handleRobberPlaceChange = (event: SelectChangeEvent) => {
         const innerRobberPlaces = [[2, 2]];
@@ -74,17 +90,20 @@ export function BoardGenerator() {
             return;
         }
 
+        let pipRange = [4, 15];
         if (newValue[1] - newValue[0] < minDistance) {
             if (activeThumb === 0) {
                 const clamped = Math.min(newValue[0], max - minDistance);
-                setPipRange([clamped, clamped + minDistance]);
+                pipRange = [clamped, clamped + minDistance];
             } else {
                 const clamped = Math.max(newValue[1], minDistance + min);
-                setPipRange([clamped - minDistance, clamped]);
+                pipRange = [clamped - minDistance, clamped];
             }
         } else {
-            setPipRange(newValue as number[]);
+            pipRange = newValue as number[];
         }
+        setPipRange(pipRange);
+        c.numberRandomizer.setPipRange(pipRange);
     };
 
     const toggleRotation = () => {
@@ -98,6 +117,8 @@ export function BoardGenerator() {
 
     return (
         <BoardGeneratorContainer>
+            {/** TODO dont use catan class mutation, use react states instead, this is hacky but faster when transfering old code*/}
+            <div style={{ display: "none" }}>{dummy}</div>
             <Button onClick={toggleRotation}>Rotate</Button>
             <BoardContainer>
                 <CatanBoard rotation={rotation} catanBoard={c} />
@@ -109,7 +130,8 @@ export function BoardGenerator() {
                         <Button
                             variant="outlined"
                             onClick={() => {
-                                c.RandomizeTerrain();
+                                const succes = c.RandomizeTerrain();
+                                setShowNotification(!succes);
                                 setDummy((prev) => (prev += 1));
                             }}
                         >
@@ -118,7 +140,8 @@ export function BoardGenerator() {
                         <Button
                             variant="outlined"
                             onClick={() => {
-                                c.RandomizeNumbers();
+                                const succes = c.RandomizeNumbers();
+                                setShowNotification(!succes);
                                 setDummy((prev) => (prev += 1));
                             }}
                         >
@@ -127,7 +150,8 @@ export function BoardGenerator() {
                         <Button
                             variant="outlined"
                             onClick={() => {
-                                c.Randomize();
+                                const succes = c.Randomize();
+                                setShowNotification(!succes);
                                 setDummy((prev) => (prev += 1));
                             }}
                         >
@@ -148,7 +172,38 @@ export function BoardGenerator() {
                             </a>
                             <div>
                                 <FormGroup>
-                                    <Typography>Pip Range</Typography>
+                                    <div>
+                                        <Typography
+                                            aria-owns={open ? "mouse-over-popover" : undefined}
+                                            aria-haspopup="true"
+                                            onMouseEnter={handlePopoverOpen}
+                                            onMouseLeave={handlePopoverClose}
+                                        >
+                                            Pip range
+                                        </Typography>
+                                        <Popover
+                                            id="mouse-over-popover"
+                                            sx={{
+                                                pointerEvents: "none",
+                                            }}
+                                            open={open}
+                                            anchorEl={anchorEl}
+                                            anchorOrigin={{
+                                                vertical: "bottom",
+                                                horizontal: "left",
+                                            }}
+                                            transformOrigin={{
+                                                vertical: "top",
+                                                horizontal: "left",
+                                            }}
+                                            onClose={handlePopoverClose}
+                                            disableRestoreFocus
+                                        >
+                                            <Typography sx={{ p: 1 }}>
+                                                Point of Production
+                                            </Typography>
+                                        </Popover>
+                                    </div>
                                     <Slider
                                         min={4}
                                         max={15}
@@ -220,9 +275,12 @@ export function BoardGenerator() {
                                         control={
                                             <Checkbox
                                                 checked={redNumberTouch}
-                                                onChange={(e) =>
-                                                    setRedNumberTouch(e.target.checked)
-                                                }
+                                                onChange={(e) => {
+                                                    c.numberRandomizer.setMatchingRedNumbersAllowed(
+                                                        e.target.checked
+                                                    );
+                                                    setRedNumberTouch(e.target.checked);
+                                                }}
                                             />
                                         }
                                         label="6 & 8 can touch"
@@ -241,6 +299,34 @@ export function BoardGenerator() {
                         Show more
                     </a>
                 )}
+                <Collapse in={showNotification}>
+                    <Alert
+                        action={
+                            <IconButton
+                                aria-label="close"
+                                color="inherit"
+                                size="small"
+                                onClick={() => {
+                                    setShowNotification(false);
+                                }}
+                            >
+                                <CloseIcon fontSize="inherit" />
+                            </IconButton>
+                        }
+                        sx={{
+                            position: "fixed",
+                            left: 0,
+                            right: 0,
+                            bottom: "0.5rem",
+                            marginLeft: "auto",
+                            marginRight: "auto",
+                            width: "90%",
+                        }}
+                        severity="warning"
+                    >
+                        Couldn't find board with the given requirements.
+                    </Alert>
+                </Collapse>
             </Container>
         </BoardGeneratorContainer>
     );

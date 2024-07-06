@@ -54,7 +54,7 @@ export class TerrainNoDuplicateBackTrack extends CatanRandomizer {
     }
 
     // Back track
-    randomize(tiles: Tile[][], robberIndex: number[]): Tile[][] {
+    randomize(tiles: Tile[][], robberIndex: number[]): [Tile[][], boolean] {
         const b = new RandomTerrain(this.intersections).randomize(tiles, robberIndex);
         const tileAvailable = new Map<Terrain, { val: number }>();
         tileAvailable.set(Terrain.BRICK, { val: 3 });
@@ -71,6 +71,6 @@ export class TerrainNoDuplicateBackTrack extends CatanRandomizer {
             newTiles.push(tileRow);
         }
         const res = this.solve(newTiles, robberIndex, tileAvailable, 0);
-        return res.length > 0 ? res[0] : b;
+        return res.length > 0 ? [res[0], true] : b;
     }
 }
