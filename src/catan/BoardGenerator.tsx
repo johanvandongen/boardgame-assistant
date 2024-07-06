@@ -11,7 +11,7 @@ const c = new CatanBoardTiles(20);
 export function BoardGenerator() {
     const [dummy, setDummy] = React.useState(0);
     const [showNotification, setShowNotification] = React.useState(false);
-    const [showMore, setShowMore] = React.useState(true);
+    const [showMore, setShowMore] = React.useState(false);
     const [rotation, setRotation] = React.useState<0 | 90>(90);
 
     // TODO dont use catan class mutation, use react states instead, this is hacky but faster when transfering old code
@@ -76,7 +76,7 @@ export function BoardGenerator() {
                 ) : (
                     <a onClick={() => setShowMore(true)}>Show more</a>
                 )}
-                <Collapse in={!showMore}>
+                <Collapse in={showMore}>
                     <GenerationOptions c={c} refresh={refresh} />
                 </Collapse>
                 <Collapse in={showNotification}>
