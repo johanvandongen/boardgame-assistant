@@ -1,11 +1,14 @@
+import { getRandomItem } from "../utils/Shuffle";
 import { CatanRandomizer } from "./randomizer/CatanRandomizer";
+import { NumberBruteForce } from "./randomizer/numbers/NumberBruteForce";
 import { RandomNumbers } from "./randomizer/numbers/RandomNumberRandomizer";
 import { RandomTerrain } from "./randomizer/terrain/RandomTerrain";
 import { TerrainNoDuplicateBackTrack } from "./randomizer/terrain/TerrainNoMatchingBackTrack";
 
 export class CatanBoardTiles {
     tiles: Tile[][] = [];
-    robberIndex: number[] = [2, 2];
+    allowedRobberPlaces: number[][] = [[2, 2]];
+    robberIndex: number[] = this.allowedRobberPlaces[0];
     numberRandomizer: CatanRandomizer;
     terrainRandomizer: CatanRandomizer;
     intersections: Intersection[] = [];
@@ -42,10 +45,14 @@ export class CatanBoardTiles {
             ]
         );
         this.SetIntersections();
-        this.numberRandomizer = new RandomNumbers(this.intersections);
-        this.terrainRandomizer = new TerrainNoDuplicateBackTrack(this.intersections, 1);
-        this.tiles = this.terrainRandomizer.randomize(this.tiles, this.robberIndex);
-        this.tiles = this.numberRandomizer.randomize(this.tiles, this.robberIndex);
+        this.numberRandomizer = new NumberBruteForce(this.intersections);
+        this.terrainRandomizer = new TerrainNoDuplicateBackTrack(this.intersections);
+        this.tiles = this.terrainRandomizer.randomize(this.tiles, this.robberIndex)[0];
+        this.tiles = this.numberRandomizer.randomize(this.tiles, this.robberIndex)[0];
+    }
+
+    public setRobberPlace(allowedRobberPlaces: number[][]) {
+        this.allowedRobberPlaces = allowedRobberPlaces;
     }
 
     private SetIntersections() {
@@ -103,17 +110,23 @@ export class CatanBoardTiles {
         }
     }
 
-    Randomize() {
-        this.RandomizeTerrain();
-        this.RandomizeNumbers();
+    Randomize(): boolean {
+        this.robberIndex = getRandomItem(this.allowedRobberPlaces);
+        const success1 = this.RandomizeTerrain();
+        const success2 = this.RandomizeNumbers();
+        return success1 && success2;
     }
 
-    RandomizeNumbers() {
-        this.tiles = this.numberRandomizer.randomize(this.tiles, this.robberIndex);
+    RandomizeNumbers(): boolean {
+        const res = this.numberRandomizer.randomize(this.tiles, this.robberIndex);
+        this.tiles = res[0];
+        return res[1];
     }
 
-    RandomizeTerrain() {
-        this.tiles = this.terrainRandomizer.randomize(this.tiles, this.robberIndex);
+    RandomizeTerrain(): boolean {
+        const res = this.terrainRandomizer.randomize(this.tiles, this.robberIndex);
+        this.tiles = res[0];
+        return res[1];
     }
 
     public print() {

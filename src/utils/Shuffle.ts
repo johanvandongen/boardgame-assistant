@@ -6,3 +6,7 @@ export const shuffle = <T>(arr: T[]): T[] => {
     }
     return arr;
 };
+
+export const getRandomItem = <T>(arr: T[]): T => {
+    return shuffle(arr)[0];
+};

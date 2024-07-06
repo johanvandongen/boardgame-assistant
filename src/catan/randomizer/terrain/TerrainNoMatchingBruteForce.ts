@@ -4,7 +4,7 @@ import { RandomTerrain } from "./RandomTerrain";
 
 export class TerrainNoMatchingBruteForce extends CatanRandomizer {
     // Brute force
-    randomize(tiles: Tile[][], robberIndex: number[]): Tile[][] {
+    randomize(tiles: Tile[][], robberIndex: number[]): [Tile[][], boolean] {
         let k = 1;
         const randomizer = new RandomTerrain(this.intersections);
         let newTiles = randomizer.randomize(tiles, robberIndex);
@@ -15,6 +15,6 @@ export class TerrainNoMatchingBruteForce extends CatanRandomizer {
             newTiles = randomizer.randomize(tiles, robberIndex);
             k += 1;
         }
-        return newTiles;
+        return [newTiles[0], false];
     }
 }
