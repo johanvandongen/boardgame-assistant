@@ -51,6 +51,9 @@ export abstract class CatanRandomizer {
         let result = 0;
         for (const pos of intersection.positions) {
             const num: number = tiles[pos.row][pos.col].token;
+            if (num === 0) {
+                return 0;
+            }
             const pip = pipConversion.get(num);
             result += pip === undefined ? 0 : pip;
         }
@@ -82,6 +85,9 @@ export abstract class CatanRandomizer {
 
     protected pipListWithingRange(piplist: number[]): boolean {
         for (const pip of piplist) {
+            if (pip === 0) {
+                continue;
+            }
             if (pip < this.pipRange[0] || pip > this.pipRange[1]) {
                 return false;
             }

@@ -71,6 +71,6 @@ export class TerrainNoDuplicateBackTrack extends CatanRandomizer {
             newTiles.push(tileRow);
         }
         const res = this.solve(newTiles, robberIndex, tileAvailable, 0);
-        return res.length > 0 ? [res[0], true] : b;
+        return res.length > 0 ? [res[0], true] : [b[0], false];
     }
 }
