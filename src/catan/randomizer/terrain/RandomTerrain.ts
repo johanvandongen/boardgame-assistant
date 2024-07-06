@@ -2,7 +2,7 @@ import { Terrain, Tile } from "../../CatanBoard";
 import { CatanRandomizer } from "../CatanRandomizer";
 
 export class RandomTerrain extends CatanRandomizer {
-    randomize(tiles: Tile[][], robberIndex: number[]): Tile[][] {
+    randomize(tiles: Tile[][], robberIndex: number[]): [Tile[][], boolean] {
         const tokens: Terrain[] = this.getTerrain();
         const newTiles: Tile[][] = [];
         for (let row = 0; row < tiles.length; row++) {
@@ -20,6 +20,6 @@ export class RandomTerrain extends CatanRandomizer {
             }
             newTiles.push(tileRow);
         }
-        return newTiles;
+        return [newTiles, true];
     }
 }
