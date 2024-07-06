@@ -20,7 +20,7 @@ export function BoardGenerator() {
     };
 
     const toggleRotation = () => {
-        if (rotation === 0 || dummy === -1) {
+        if (rotation === 0) {
             setRotation(90);
         } else {
             setRotation(0);

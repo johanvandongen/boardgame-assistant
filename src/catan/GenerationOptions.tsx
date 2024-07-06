@@ -85,7 +85,7 @@ export function GenerationOptions({ c, refresh }: IGenerationOptionsProps) {
         refresh();
     };
 
-    const handleChange1 = (event: Event, newValue: number | number[], activeThumb: number) => {
+    const handleChange1 = (_event: Event, newValue: number | number[], activeThumb: number) => {
         const max = 15;
         const min = 4;
         if (!Array.isArray(newValue)) {
