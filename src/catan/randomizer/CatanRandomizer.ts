@@ -14,7 +14,7 @@ export abstract class CatanRandomizer {
         intersections: Intersection[],
         matchingTerrain: number = 0,
         matchingRedNumbersAllowed: boolean = false,
-        pipRange: number[] = [4, 15]
+        pipRange: number[] = [7, 14]
     ) {
         this.intersections = intersections;
         this.matchingTerrain = matchingTerrain;

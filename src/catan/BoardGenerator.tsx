@@ -72,13 +72,13 @@ export function BoardGenerator() {
                     </GenerateContainer>
                 </div>
                 {showMore ? (
-                    <div>
-                        <a onClick={() => setShowMore(false)}>Show less</a>
-                        <GenerationOptions c={c} refresh={refresh} />
-                    </div>
+                    <a onClick={() => setShowMore(false)}>Show less</a>
                 ) : (
                     <a onClick={() => setShowMore(true)}>Show more</a>
                 )}
+                <Collapse in={!showMore}>
+                    <GenerationOptions c={c} refresh={refresh} />
+                </Collapse>
                 <Collapse in={showNotification}>
                     <Alert
                         action={

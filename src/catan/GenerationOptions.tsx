@@ -1,6 +1,7 @@
 import * as React from "react";
 import {
     Checkbox,
+    Collapse,
     FormControl,
     FormControlLabel,
     FormGroup,
@@ -10,6 +11,7 @@ import {
     Select,
     SelectChangeEvent,
     Slider,
+    TextField,
     Typography,
 } from "@mui/material";
 import { CatanBoardTiles } from "./CatanBoard";
@@ -25,8 +27,11 @@ function valuetext(value: number) {
 export function GenerationOptions({ c, refresh }: IGenerationOptionsProps) {
     const [terrainTouch, setTerrainTouch] = React.useState(false);
     const [redNumberTouch, setRedNumberTouch] = React.useState(false);
-    const [pipRange, setPipRange] = React.useState<number[]>([1, 15]);
+    const [pipRange, setPipRange] = React.useState<number[]>([8, 14]);
+    const [showExactRobberPlace, setShowExactRobberPlace] = React.useState(false);
+    const [correctExactRobberPlace, setCorrectExactRobberPlace] = React.useState(true);
     const [robberPlace, setRobberPlace] = React.useState<string>("Inner");
+    const [exactRobberPlace, setExactRobberPlace] = React.useState<number>(33);
     const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
 
     const handlePopoverOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -69,8 +74,13 @@ export function GenerationOptions({ c, refresh }: IGenerationOptionsProps) {
             c.setRobberPlace(middleRobberPlaces);
         } else if (event.target.value === "Outer") {
             c.setRobberPlace(outerRobberPlaces);
+        } else if (event.target.value === "Exact") {
+            setRobberPlace(event.target.value);
+            setShowExactRobberPlace(true);
+            return;
         }
         c.Randomize();
+        setShowExactRobberPlace(false);
         setRobberPlace(event.target.value);
         refresh();
     };
@@ -159,20 +169,54 @@ export function GenerationOptions({ c, refresh }: IGenerationOptionsProps) {
                         },
                     ]}
                 />
-                <FormControl fullWidth variant="filled">
-                    <InputLabel id="demo-simple-select-label">Robber spawn place</InputLabel>
-                    <Select
-                        labelId="demo-simple-select-label"
-                        id="demo-simple-select"
-                        value={robberPlace}
-                        label="Robber spawn place"
-                        onChange={handleRobberPlaceChange}
-                    >
-                        <MenuItem value={"Inner"}>Inner ring</MenuItem>
-                        <MenuItem value={"Middle"}>Middle ring</MenuItem>
-                        <MenuItem value={"Outer"}>Outer ring</MenuItem>
-                    </Select>
-                </FormControl>
+                <div>
+                    <FormControl fullWidth variant="filled">
+                        <InputLabel id="demo-simple-select-label">Robber spawn place</InputLabel>
+                        <Select
+                            labelId="demo-simple-select-label"
+                            id="demo-simple-select"
+                            value={robberPlace}
+                            label="Robber spawn place"
+                            onChange={handleRobberPlaceChange}
+                        >
+                            <MenuItem value={"Inner"}>Inner ring</MenuItem>
+                            <MenuItem value={"Middle"}>Middle ring</MenuItem>
+                            <MenuItem value={"Outer"}>Outer ring</MenuItem>
+                            <MenuItem value={"Exact"}>Exact</MenuItem>
+                        </Select>
+                    </FormControl>
+                </div>
+
+                <Collapse in={showExactRobberPlace}>
+                    <TextField
+                        error={!correctExactRobberPlace}
+                        id="outlined-number"
+                        label="Robber spawn place (exact)"
+                        type="number"
+                        variant="filled"
+                        helperText={correctExactRobberPlace ? "" : "out of bounds, use (row,col)"}
+                        value={exactRobberPlace}
+                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                            setExactRobberPlace(parseInt(event.target.value));
+                            const row = parseInt(event.target.value[0]) - 1;
+                            const col = parseInt(event.target.value[1]) - 1;
+                            console.log(row, col);
+                            if (
+                                row >= 0 &&
+                                row < c.tiles.length &&
+                                col >= 0 &&
+                                col < c.tiles[row].length
+                            ) {
+                                setCorrectExactRobberPlace(true);
+                                c.setRobberPlace([[row, col]]);
+                                c.Randomize();
+                                refresh();
+                            } else {
+                                setCorrectExactRobberPlace(false);
+                            }
+                        }}
+                    />
+                </Collapse>
                 <FormControlLabel
                     control={
                         <Checkbox
