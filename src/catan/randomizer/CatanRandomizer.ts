@@ -22,6 +22,10 @@ export abstract class CatanRandomizer {
         this.pipRange = pipRange;
     }
 
+    public setMatchingTerrain(value: number) {
+        this.matchingTerrain = value;
+    }
+
     // List of tilepositions. When following this, we form intersections quickly.
     // This way the backtracking algorithm works faster, because branches are pruned early.
     backTrackOrder: TilePosition[] = [

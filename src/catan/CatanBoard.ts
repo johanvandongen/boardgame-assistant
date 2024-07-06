@@ -1,3 +1,4 @@
+import { getRandomItem } from "../utils/Shuffle";
 import { CatanRandomizer } from "./randomizer/CatanRandomizer";
 import { RandomNumbers } from "./randomizer/numbers/RandomNumberRandomizer";
 import { RandomTerrain } from "./randomizer/terrain/RandomTerrain";
@@ -5,7 +6,8 @@ import { TerrainNoDuplicateBackTrack } from "./randomizer/terrain/TerrainNoMatch
 
 export class CatanBoardTiles {
     tiles: Tile[][] = [];
-    robberIndex: number[] = [2, 2];
+    allowedRobberPlaces: number[][] = [[2, 2]];
+    robberIndex: number[] = this.allowedRobberPlaces[0];
     numberRandomizer: CatanRandomizer;
     terrainRandomizer: CatanRandomizer;
     intersections: Intersection[] = [];
@@ -43,9 +45,13 @@ export class CatanBoardTiles {
         );
         this.SetIntersections();
         this.numberRandomizer = new RandomNumbers(this.intersections);
-        this.terrainRandomizer = new TerrainNoDuplicateBackTrack(this.intersections, 1);
+        this.terrainRandomizer = new TerrainNoDuplicateBackTrack(this.intersections);
         this.tiles = this.terrainRandomizer.randomize(this.tiles, this.robberIndex);
         this.tiles = this.numberRandomizer.randomize(this.tiles, this.robberIndex);
+    }
+
+    public setRobberPlace(allowedRobberPlaces: number[][]) {
+        this.allowedRobberPlaces = allowedRobberPlaces;
     }
 
     private SetIntersections() {
@@ -104,6 +110,7 @@ export class CatanBoardTiles {
     }
 
     Randomize() {
+        this.robberIndex = getRandomItem(this.allowedRobberPlaces);
         this.RandomizeTerrain();
         this.RandomizeNumbers();
     }
