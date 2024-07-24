@@ -5,6 +5,8 @@ export interface Step {
     col: number;
     value: number;
     method: string;
+    backtrackValues: number[];
+    backtrackIdx: number;
 }
 export class SudokuSolver {
     private grid: number[][];
@@ -109,6 +111,24 @@ export class SudokuSolver {
         return this.steps;
     }
 
+    private getNextEmptyCell(): [number, number] | null {
+        let minOptions: number = 9;
+        let nextCell: null | [number, number] = null;
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (this.notes[r][c] === null || this.notes[r][c] === undefined) {
+                    continue;
+                }
+                const options = this.notes[r][c]?.length;
+                if (options !== undefined && options < minOptions) {
+                    minOptions = options;
+                    nextCell = [r, c];
+                }
+            }
+        }
+        return nextCell;
+    }
+
     private boxCheck(): Step | null {
         for (const box of this.boxes) {
             for (let option = 1; option <= 9; option++) {
@@ -118,6 +138,8 @@ export class SudokuSolver {
                     col: 0,
                     value: 0,
                     method: "box",
+                    backtrackValues: [],
+                    backtrackIdx: 0,
                 };
                 for (let r = box[0]; r < box[0] + 3; r++) {
                     for (let c = box[1]; c < box[1] + 3; c++) {
@@ -127,7 +149,6 @@ export class SudokuSolver {
                         if (this.notes[r][c]?.includes(option)) {
                             cnt += 1;
                             [step.row, step.col, step.value] = [r, c, option];
-                            step.col = c;
                         }
                     }
                 }
@@ -139,14 +160,168 @@ export class SudokuSolver {
         return null;
     }
 
-    public step() {
-        const resultBox = this.boxCheck();
-        if (resultBox !== null) {
-            this.grid[resultBox.row][resultBox.col] = resultBox.value;
-            this.steps.push(resultBox);
-            return this;
+    private rowCheck(): Step | null {
+        for (let r = 0; r < 9; r++) {
+            let cnt = 0;
+            const step: Step = {
+                row: 0,
+                col: 0,
+                value: 0,
+                method: "row",
+                backtrackValues: [],
+                backtrackIdx: 0,
+            };
+            for (let option = 1; option <= 9; option++) {
+                for (let c = 0; c < 9; c++) {
+                    if (this.notes[r][c] === null || this.notes[r][c] === undefined) {
+                        continue;
+                    }
+                    if (this.notes[r][c]?.includes(option)) {
+                        cnt += 1;
+                        [step.row, step.col, step.value] = [r, c, option];
+                    }
+                }
+            }
+            if (cnt === 1) {
+                return step;
+            }
         }
-        console.log(resultBox);
+        return null;
+    }
+
+    private colCheck(): Step | null {
+        for (let c = 0; c < 9; c++) {
+            let cnt = 0;
+            const step: Step = {
+                row: 0,
+                col: 0,
+                value: 0,
+                method: "col",
+                backtrackValues: [],
+                backtrackIdx: 0,
+            };
+            for (let option = 1; option <= 9; option++) {
+                for (let r = 0; r < 9; r++) {
+                    if (this.notes[r][c] === null || this.notes[r][c] === undefined) {
+                        continue;
+                    }
+                    if (this.notes[r][c]?.includes(option)) {
+                        cnt += 1;
+                        [step.row, step.col, step.value] = [r, c, option];
+                    }
+                }
+            }
+            if (cnt === 1) {
+                return step;
+            }
+        }
+        return null;
+    }
+
+    private lastPossibleNumberCheck() {
+        // ...
+    }
+
+    /** Checks if a cell with no options exists (does not check if the grid is a valid configuration!). */
+    private isSolvable(): boolean {
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (this.notes[r][c] === null || this.notes[r][c] === undefined) {
+                    continue;
+                }
+                if (this.notes[r][c]?.length === 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public isSolved(): boolean {
+        return !this.grid.flat().includes(0);
+    }
+
+    public isValid(): boolean {
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                const temp = this.grid[r][c];
+                this.grid[r][c] = 0;
+                if (this.conflict(r, c, temp)) {
+                    return false;
+                }
+                this.grid[r][c] = temp;
+            }
+        }
+        return true;
+    }
+
+    public step() {
+        if (this.isSolved()) {
+            console.log("solved", this.isValid());
+            return true;
+        }
+        if (!this.isSolvable()) {
+            console.log("not a valid grid, backtrack");
+            const goBack = true;
+            while (goBack) {
+                const lastStep = this.steps.pop();
+                if (lastStep === undefined) {
+                    return this;
+                }
+                if (
+                    lastStep.method === "backtrack" &&
+                    lastStep.backtrackIdx < lastStep.backtrackValues.length - 1
+                ) {
+                    const newstep: Step = {
+                        ...lastStep,
+                        value: lastStep.backtrackValues[lastStep.backtrackIdx + 1],
+                        backtrackIdx: lastStep.backtrackIdx + 1,
+                    };
+                    this.grid[newstep.row][newstep.col] = newstep.value;
+                    this.steps.push(newstep);
+                    return this;
+                } else {
+                    this.grid[lastStep.row][lastStep.col] = 0;
+                }
+            }
+        }
+
+        // const rowCheck = this.rowCheck();
+        // if (rowCheck !== null) {
+        //     this.grid[rowCheck.row][rowCheck.col] = rowCheck.value;
+        //     this.steps.push(rowCheck);
+        //     return this;
+        // }
+        // const colCheck = this.colCheck();
+        // if (colCheck !== null) {
+        //     this.grid[colCheck.row][colCheck.col] = colCheck.value;
+        //     this.steps.push(colCheck);
+        //     return this;
+        // }
+
+        // const boxCheck = this.boxCheck();
+        // if (boxCheck !== null) {
+        //     this.grid[boxCheck.row][boxCheck.col] = boxCheck.value;
+        //     this.steps.push(boxCheck);
+        //     return this;
+        // }
+
+        // Backtrack
+        console.log("No simple solution, start backtracking!", this.getNextEmptyCell());
+        const emptyCell = this.getNextEmptyCell();
+        const r = emptyCell ? emptyCell[0] : -1;
+        const c = emptyCell ? emptyCell[1] : -1;
+        if (emptyCell !== null && this.notes[r][c] !== null) {
+            this.grid[r][c] = this.notes[r][c][0];
+            this.steps.push({
+                row: r,
+                col: c,
+                value: this.notes[r][c][0],
+                method: "backtrack",
+                backtrackValues: this.notes[r][c],
+                backtrackIdx: 0,
+            });
+        }
 
         return this;
     }

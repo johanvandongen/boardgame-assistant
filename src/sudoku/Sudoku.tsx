@@ -20,7 +20,11 @@ export function Sudoku() {
 
     const handleStep = () => {
         setSudoku((prev) => {
-            const n: SudokuSolver = prev.step();
+            const n: SudokuSolver | boolean = prev.step();
+            if (n === true) {
+                return prev;
+            }
+            console.log(n.getLastStep());
             return new SudokuSolver(n.getGrid(), undefined, n.getSteps());
         }); // create new class instance, because react
     };

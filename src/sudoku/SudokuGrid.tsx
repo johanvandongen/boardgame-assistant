@@ -11,13 +11,13 @@ export function SudokuGrid({ sudoku, showNotes }: ISudokuGridProps) {
     const notes = sudoku.getNotes();
     const lastStep = sudoku.getLastStep();
     // const s = { ...sudoku, notes: sudoku.getNotes() };
-    console.log("notes", sudoku.getNotes());
+    // console.log("notes", sudoku.getNotes());
     const cells = 9;
     const cellSize = 32;
     const gridSize = cells * cellSize;
     const outerStrokeWidth = 2;
     const innerStrokeWidth = 1;
-    console.log(grid);
+    // console.log(grid);
     return (
         <svg viewBox={`0 0 ${gridSize + outerStrokeWidth} ${gridSize + outerStrokeWidth}`}>
             {lastStep !== null && (
