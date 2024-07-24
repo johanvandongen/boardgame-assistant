@@ -8,6 +8,41 @@ export interface Step {
     backtrackValues: number[];
     backtrackIdx: number;
 }
+
+class Tree<T> {
+    value: T;
+    parent: Tree<T> | null;
+    children: Tree<T>[] = [];
+
+    constructor(parent: Tree<T> | null, value: T) {
+        this.parent = parent;
+        this.value = value;
+    }
+
+    getRoot(): Tree<T> {
+        let root = this.parent;
+        if (root === null) {
+            return this;
+        }
+
+        while (root.parent !== null) {
+            root = root.parent;
+        }
+        return root;
+    }
+
+    getSize(): number {
+        if (this.children.length === 0) {
+            return 1;
+        }
+        let size = 0;
+        for (const child of this.children) {
+            size += 1 + child.getSize();
+        }
+        return size;
+    }
+}
+
 export class SudokuSolver {
     private grid: number[][];
     private notes: Notes;
@@ -23,8 +58,9 @@ export class SudokuSolver {
         [6, 6],
     ];
     private steps: Step[];
+    private solveTree: Tree<number>;
 
-    constructor(grid: number[][], notes?: Notes, steps?: Step[]) {
+    constructor(grid: number[][], notes?: Notes, steps?: Step[], tree?: Tree<number>) {
         this.grid = grid;
         if (notes === undefined) {
             const g = [];
@@ -36,6 +72,11 @@ export class SudokuSolver {
             this.notes = notes;
         }
         this.steps = steps === undefined ? [] : steps;
+        this.solveTree = tree === undefined ? new Tree(null, -1) : tree;
+    }
+
+    public getTree() {
+        return this.solveTree;
     }
 
     public getGrid() {
@@ -265,6 +306,9 @@ export class SudokuSolver {
             const goBack = true;
             while (goBack) {
                 const lastStep = this.steps.pop();
+                if (this.solveTree.parent !== null) {
+                    this.solveTree = this.solveTree.parent;
+                }
                 if (lastStep === undefined) {
                     return this;
                 }
@@ -279,6 +323,9 @@ export class SudokuSolver {
                     };
                     this.grid[newstep.row][newstep.col] = newstep.value;
                     this.steps.push(newstep);
+                    const child = new Tree(this.solveTree, -1);
+                    this.solveTree.children.push(child);
+                    this.solveTree = child;
                     return this;
                 } else {
                     this.grid[lastStep.row][lastStep.col] = 0;
@@ -321,6 +368,9 @@ export class SudokuSolver {
                 backtrackValues: this.notes[r][c],
                 backtrackIdx: 0,
             });
+            const child = new Tree(this.solveTree, this.notes[r][c][0]);
+            this.solveTree.children.push(child);
+            this.solveTree = child;
         }
 
         return this;

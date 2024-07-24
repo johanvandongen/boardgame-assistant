@@ -25,7 +25,8 @@ export function Sudoku() {
                 return prev;
             }
             console.log(n.getLastStep());
-            return new SudokuSolver(n.getGrid(), undefined, n.getSteps());
+            console.log("solve size: ", n.getTree().getRoot().getSize(), n.getTree().getRoot());
+            return new SudokuSolver(n.getGrid(), undefined, n.getSteps(), n.getTree());
         }); // create new class instance, because react
     };
 
