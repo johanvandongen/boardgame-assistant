@@ -1,3 +1,5 @@
+import { Solvers } from "./Sudoku";
+
 export type Notes = (null | number[])[][]; // 2d grid with: null if cell is occupied, list of possible options otherwise
 
 export interface Step {
@@ -59,6 +61,7 @@ export class SudokuSolver {
     ];
     private steps: Step[];
     private solveTree: Tree<number>;
+    private solverOptions: Solvers | undefined = undefined;
 
     constructor(grid: number[][], notes?: Notes, steps?: Step[], tree?: Tree<number>) {
         this.grid = grid;
@@ -73,6 +76,10 @@ export class SudokuSolver {
         }
         this.steps = steps === undefined ? [] : steps;
         this.solveTree = tree === undefined ? new Tree(null, -1) : tree;
+    }
+
+    public setSolverOptions(solverOptions: Solvers) {
+        this.solverOptions = solverOptions;
     }
 
     public getTree() {
@@ -141,7 +148,6 @@ export class SudokuSolver {
     }
 
     public getLastStep(): Step | null {
-        console.log(this.steps.length);
         if (this.steps.length === 0) {
             return null;
         }
@@ -170,7 +176,7 @@ export class SudokuSolver {
         return nextCell;
     }
 
-    private boxCheck(): Step | null {
+    private boxCheck = (): Step | null => {
         for (const box of this.boxes) {
             for (let option = 1; option <= 9; option++) {
                 let cnt = 0;
@@ -199,9 +205,9 @@ export class SudokuSolver {
             }
         }
         return null;
-    }
+    };
 
-    private rowCheck(): Step | null {
+    private rowCheck = (): Step | null => {
         for (let r = 0; r < 9; r++) {
             let cnt = 0;
             const step: Step = {
@@ -228,9 +234,9 @@ export class SudokuSolver {
             }
         }
         return null;
-    }
+    };
 
-    private colCheck(): Step | null {
+    private colCheck = (): Step | null => {
         for (let c = 0; c < 9; c++) {
             let cnt = 0;
             const step: Step = {
@@ -257,7 +263,7 @@ export class SudokuSolver {
             }
         }
         return null;
-    }
+    };
 
     private lastPossibleNumberCheck() {
         // ...
@@ -296,11 +302,26 @@ export class SudokuSolver {
         return true;
     }
 
+    private getSolvers(): (() => Step | null)[] {
+        const result = [];
+        if (this.solverOptions === undefined || this.solverOptions.rowCheck.enabled) {
+            result.push(this.rowCheck);
+        }
+        if (this.solverOptions === undefined || this.solverOptions.colCheck.enabled) {
+            result.push(this.colCheck);
+        }
+        if (this.solverOptions === undefined || this.solverOptions.boxCheck.enabled) {
+            result.push(this.boxCheck);
+        }
+        return result;
+    }
+
     public step() {
         if (this.isSolved()) {
-            console.log("solved", this.isValid());
+            console.log("solved", this.isValid(), this.getTree().getRoot().getSize());
             return true;
         }
+        // console.log(this.solverOptions);
         if (!this.isSolvable()) {
             console.log("not a valid grid, backtrack");
             const goBack = true;
@@ -332,47 +353,41 @@ export class SudokuSolver {
                 }
             }
         }
-
-        // const rowCheck = this.rowCheck();
-        // if (rowCheck !== null) {
-        //     this.grid[rowCheck.row][rowCheck.col] = rowCheck.value;
-        //     this.steps.push(rowCheck);
-        //     return this;
-        // }
-        // const colCheck = this.colCheck();
-        // if (colCheck !== null) {
-        //     this.grid[colCheck.row][colCheck.col] = colCheck.value;
-        //     this.steps.push(colCheck);
-        //     return this;
-        // }
-
-        // const boxCheck = this.boxCheck();
-        // if (boxCheck !== null) {
-        //     this.grid[boxCheck.row][boxCheck.col] = boxCheck.value;
-        //     this.steps.push(boxCheck);
-        //     return this;
-        // }
-
-        // Backtrack
-        console.log("No simple solution, start backtracking!", this.getNextEmptyCell());
-        const emptyCell = this.getNextEmptyCell();
-        const r = emptyCell ? emptyCell[0] : -1;
-        const c = emptyCell ? emptyCell[1] : -1;
-        if (emptyCell !== null && this.notes[r][c] !== null) {
-            this.grid[r][c] = this.notes[r][c][0];
-            this.steps.push({
-                row: r,
-                col: c,
-                value: this.notes[r][c][0],
-                method: "backtrack",
-                backtrackValues: this.notes[r][c],
-                backtrackIdx: 0,
-            });
-            const child = new Tree(this.solveTree, this.notes[r][c][0]);
-            this.solveTree.children.push(child);
-            this.solveTree = child;
+        const solvers: (() => Step | null)[] = this.getSolvers(); //[this.rowCheck, this.colCheck, this.boxCheck];
+        // const solvers: (() => Step | null)[] = [this.rowCheck, this.colCheck, this.boxCheck];
+        for (const solver of solvers) {
+            const result = solver();
+            if (result !== null) {
+                this.grid[result.row][result.col] = result.value;
+                this.steps.push(result);
+                return this;
+            }
         }
 
-        return this;
+        // Backtrack
+        if (this.solverOptions?.backtrack.enabled) {
+            console.log("No simple solution, start backtracking!", this.getNextEmptyCell());
+            const emptyCell = this.getNextEmptyCell();
+            const r = emptyCell ? emptyCell[0] : -1;
+            const c = emptyCell ? emptyCell[1] : -1;
+            if (emptyCell !== null && this.notes[r][c] !== null) {
+                this.grid[r][c] = this.notes[r][c][0];
+                this.steps.push({
+                    row: r,
+                    col: c,
+                    value: this.notes[r][c][0],
+                    method: "backtrack",
+                    backtrackValues: this.notes[r][c],
+                    backtrackIdx: 0,
+                });
+                const child = new Tree(this.solveTree, this.notes[r][c][0]);
+                this.solveTree.children.push(child);
+                this.solveTree = child;
+                return this;
+            }
+        }
+
+        console.log("Cannot solve further");
+        return false;
     }
 }
