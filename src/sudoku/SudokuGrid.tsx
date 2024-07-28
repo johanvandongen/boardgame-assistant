@@ -1,26 +1,23 @@
 import * as React from "react";
-import { SudokuSolver } from "./SudokuSolver";
+import { Step, SudokuSolver } from "./SudokuSolver";
 
 export interface ISudokuGridProps {
-    sudoku: SudokuSolver;
+    sudoku: number[][];
+    steps: Step[];
     showNotes: boolean;
 }
 
-export function SudokuGrid({ sudoku, showNotes }: ISudokuGridProps) {
-    const grid = sudoku.getGrid();
-    const notes = sudoku.getNotes();
-    const lastStep = sudoku.getLastStep();
-    // const s = { ...sudoku, notes: sudoku.getNotes() };
-    // console.log("notes", sudoku.getNotes());
+export function SudokuGrid({ sudoku, steps, showNotes }: ISudokuGridProps) {
+    const notes = SudokuSolver.calculateNotes(sudoku);
+    const lastStep = steps.slice(-1)[0];
     const cells = 9;
     const cellSize = 32;
     const gridSize = cells * cellSize;
     const outerStrokeWidth = 2;
     const innerStrokeWidth = 1;
-    // console.log(grid);
     return (
         <svg viewBox={`0 0 ${gridSize + outerStrokeWidth} ${gridSize + outerStrokeWidth}`}>
-            {lastStep !== null && (
+            {lastStep !== undefined && (
                 <rect
                     x={lastStep.col * cellSize}
                     y={lastStep.row * cellSize}
@@ -29,7 +26,7 @@ export function SudokuGrid({ sudoku, showNotes }: ISudokuGridProps) {
                     fill="green"
                 ></rect>
             )}
-            {grid.map((row, r) =>
+            {sudoku.map((row, r) =>
                 row.map((val, c) => (
                     <text
                         key={"gridvalue" + r.toString() + "-" + c.toString()}

@@ -1,7 +1,7 @@
 import { SudokuGrid } from "./SudokuGrid";
 import { Button, Checkbox, FormControlLabel, FormGroup, styled, Switch } from "@mui/material";
-import { SudokuSolver } from "./SudokuSolver";
-import { useEffect, useState } from "react";
+import { Step, SudokuSolver } from "./SudokuSolver";
+import { useState } from "react";
 
 export interface Solver {
     enabled: boolean;
@@ -20,43 +20,35 @@ const solvers: Solvers = {
     backtrack: { enabled: true, label: "backtrack" },
 };
 
+const grid = [
+    [0, 0, 4, 0, 0, 1, 0, 6, 0],
+    [0, 0, 0, 9, 2, 0, 0, 0, 0],
+    [7, 8, 0, 0, 0, 6, 5, 1, 0],
+    [0, 6, 0, 0, 7, 0, 4, 0, 0],
+    [0, 0, 0, 0, 0, 2, 0, 0, 3],
+    [0, 9, 0, 0, 0, 4, 2, 5, 1],
+    [4, 3, 1, 0, 0, 9, 0, 8, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 3, 0, 5],
+];
 export function Sudoku() {
-    const grid = [
-        [0, 0, 4, 0, 0, 1, 0, 6, 0],
-        [0, 0, 0, 9, 2, 0, 0, 0, 0],
-        [7, 8, 0, 0, 0, 6, 5, 1, 0],
-        [0, 6, 0, 0, 7, 0, 4, 0, 0],
-        [0, 0, 0, 0, 0, 2, 0, 0, 3],
-        [0, 9, 0, 0, 0, 4, 2, 5, 1],
-        [4, 3, 1, 0, 0, 9, 0, 8, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 3, 0, 5],
-    ];
-    const [sudoku, setSudoku] = useState<SudokuSolver>(new SudokuSolver(grid));
     const [solver, setSolvers] = useState<Solvers>(solvers);
-    const [solveSize, setSolveSize] = useState<number | undefined>(undefined);
     const [showNotes, setShowNotes] = useState(false);
-    // const [steps, setSteps] = useState([]);
+    const [sud, setSud] = useState<{ grid: number[][]; steps: Step[]; options: Solvers }>({
+        grid: grid,
+        steps: [],
+        options: solvers,
+    });
+    // const notes = SudokuSolver.calculateNotes(sud.grid);
 
     const handleStep = () => {
-        setSudoku((prev) => {
-            console.log(JSON.stringify(prev.getSteps()));
-            const copy = new SudokuSolver(
-                prev.getGrid(),
-                undefined,
-                prev.getSteps(),
-                prev.getTree()
-            );
-            // console.log(JSON.stringify(copy));
-            const n: SudokuSolver | boolean = copy.step();
-            if (n === true || n === false) {
-                return prev;
+        setSud((prev) => {
+            const [step, grid] = SudokuSolver.step(prev.grid, prev.options);
+            if (!(typeof step === "boolean")) {
+                return { grid: grid, steps: [...prev.steps, step], options: prev.options };
             }
-            // console.log("new", n);
-            // console.log(n.getTree().getRoot().getStr());
-            // const result = new SudokuSolver(n.getGrid(), undefined, n.getSteps(), n.getTree());
-            return n;
-        }); // create new class instance, because react
+            return prev;
+        });
     };
 
     const handleSolvers = (solverToUpdate: Solver) => {
@@ -71,27 +63,17 @@ export function Sudoku() {
         });
     };
 
-    useEffect(() => {
-        setSolveSize(sudoku.getTree().getRoot().getSize());
-    }, [sudoku]);
-
-    useEffect(() => {
-        sudoku.setSolverOptions(solver);
-    }, [sudoku, solver]);
-
     return (
         <Container>
             <div>
                 <BoardGeneratorContainer>
-                    <SudokuGrid sudoku={sudoku} showNotes={showNotes} />
+                    <SudokuGrid sudoku={sud.grid} showNotes={showNotes} steps={sud.steps} />
                 </BoardGeneratorContainer>
                 <ButtonContainer>
                     <Button
                         variant="outlined"
                         onClick={() => {
                             handleStep();
-                            // handleStep();
-                            // handleStep();
                         }}
                     >
                         Step
@@ -139,7 +121,7 @@ export function Sudoku() {
                 ></FormControlLabel>
                 <div>
                     <p>Metadata</p>
-                    <p>Solve size: {solveSize}</p>
+                    <p>Solve size: {sud.steps.length}</p>
                 </div>
                 {/* <p>check notes version</p> */}
             </div>

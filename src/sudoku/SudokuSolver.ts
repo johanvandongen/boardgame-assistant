@@ -1,4 +1,5 @@
 import { Solvers } from "./Sudoku";
+import { SudokuChecker } from "./SudokuChecker";
 
 export type Notes = (null | number[])[][]; // 2d grid with: null if cell is occupied, list of possible options otherwise
 
@@ -11,7 +12,7 @@ export interface Step {
     backtrackIdx: number;
 }
 
-class Tree<T> {
+export class Tree<T> {
     value: T;
     parent: Tree<T> | null;
     children: Tree<T>[] = [];
@@ -57,10 +58,10 @@ class Tree<T> {
     }
 }
 
-export class SudokuSolver {
-    private grid: number[][];
-    private notes: Notes;
-    private readonly boxes: [number, number][] = [
+export abstract class SudokuSolver {
+    // private grid: number[][];
+    // private notes: Notes;
+    private static readonly boxes: [number, number][] = [
         [0, 0],
         [3, 0],
         [6, 0],
@@ -71,114 +72,120 @@ export class SudokuSolver {
         [3, 6],
         [6, 6],
     ];
-    private steps: Step[];
-    private solveTree: Tree<number>;
-    private solverOptions: Solvers | undefined = undefined;
+    // private steps: Step[];
+    // private solveTree: Tree<number>;
+    // private solverOptions: Solvers | undefined = undefined;
 
-    constructor(grid: number[][], notes?: Notes, steps?: Step[], tree?: Tree<number>) {
-        this.grid = grid.map((r) => r.slice());
-        if (notes === undefined) {
-            const g = [];
-            for (let r = 0; r < 9; r++) {
-                g.push(new Array(9).fill(undefined));
-            }
-            this.notes = g;
-        } else {
-            this.notes = notes;
-        }
-        this.steps = steps === undefined ? [] : JSON.parse(JSON.stringify(steps));
-        this.solveTree = tree === undefined ? new Tree(null, -1) : tree;
-    }
+    // constructor(grid: number[][], notes?: Notes, steps?: Step[], tree?: Tree<number>) {
+    //     this.grid = grid.map((r) => r.slice());
+    //     if (notes === undefined) {
+    //         const g = [];
+    //         for (let r = 0; r < 9; r++) {
+    //             g.push(new Array(9).fill(undefined));
+    //         }
+    //         this.notes = g;
+    //     } else {
+    //         this.notes = notes;
+    //     }
+    //     this.steps = steps === undefined ? [] : JSON.parse(JSON.stringify(steps));
+    //     this.solveTree = tree === undefined ? new Tree(null, -1) : tree;
+    // }
 
-    public setSolverOptions(solverOptions: Solvers) {
-        this.solverOptions = solverOptions;
-    }
+    // public setSolverOptions(solverOptions: Solvers) {
+    //     this.solverOptions = solverOptions;
+    // }
 
-    public getTree() {
-        return this.solveTree;
-    }
+    // public getTree() {
+    //     return this.solveTree;
+    // }
 
-    public getGrid() {
-        return this.grid;
-    }
+    // public getGrid() {
+    //     return this.grid;
+    // }
 
-    private rowConflict(r: number, value: number): boolean {
-        return this.grid[r].includes(value);
-    }
+    // private rowConflict(r: number, value: number): boolean {
+    //     return this.grid[r].includes(value);
+    // }
 
-    private boxConflict(r: number, c: number, value: number): boolean {
-        const sr = Math.floor(r / 3) * 3;
-        const sc = Math.floor(c / 3) * 3;
-        for (let row = sr; row < sr + 3; row++) {
-            for (let col = sc; col < sc + 3; col++) {
-                if (this.grid[row][col] === value) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+    // private boxConflict(r: number, c: number, value: number): boolean {
+    //     const sr = Math.floor(r / 3) * 3;
+    //     const sc = Math.floor(c / 3) * 3;
+    //     for (let row = sr; row < sr + 3; row++) {
+    //         for (let col = sc; col < sc + 3; col++) {
+    //             if (this.grid[row][col] === value) {
+    //                 return true;
+    //             }
+    //         }
+    //     }
+    //     return false;
+    // }
 
-    private colConflict(c: number, value: number): boolean {
+    // private colConflict(c: number, value: number): boolean {
+    //     for (let r = 0; r < 9; r++) {
+    //         if (this.grid[r][c] === value) {
+    //             return true;
+    //         }
+    //     }
+    //     return false;
+    // }
+
+    // private conflict(r: number, c: number, value: number): boolean {
+    //     return (
+    //         this.rowConflict(r, value) ||
+    //         this.colConflict(c, value) ||
+    //         this.boxConflict(r, c, value)
+    //     );
+    // }
+
+    static calculateNotes(grid: number[][]) {
+        // const notes: (number[] | null)[][] = [];
+        const notes: Notes = [];
         for (let r = 0; r < 9; r++) {
-            if (this.grid[r][c] === value) {
-                return true;
-            }
+            notes.push(new Array(9).fill(undefined));
         }
-        return false;
-    }
-
-    private conflict(r: number, c: number, value: number): boolean {
-        return (
-            this.rowConflict(r, value) ||
-            this.colConflict(c, value) ||
-            this.boxConflict(r, c, value)
-        );
-    }
-
-    private calculateNotes() {
         for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 9; c++) {
-                if (this.grid[r][c] !== 0) {
-                    this.notes[r][c] = null;
+                if (grid[r][c] !== 0) {
+                    notes[r][c] = null;
                 } else {
                     const options: number[] = [];
                     for (let option = 1; option <= 9; option++) {
-                        if (!this.conflict(r, c, option)) {
+                        if (!SudokuChecker.conflict(grid, r, c, option)) {
                             options.push(option);
                         }
                     }
-                    this.notes[r][c] = options;
+                    notes[r][c] = options;
                 }
             }
         }
+        return notes;
     }
 
-    public getNotes() {
-        // this.calculateNotes();
-        return this.notes;
-    }
+    // public getNotes() {
+    //     // this.calculateNotes();
+    //     return this.notes;
+    // }
 
-    public getLastStep(): Step | null {
-        if (this.steps.length === 0) {
-            return null;
-        }
-        return this.steps[this.steps.length - 1];
-    }
+    // public getLastStep(): Step | null {
+    //     if (this.steps.length === 0) {
+    //         return null;
+    //     }
+    //     return this.steps[this.steps.length - 1];
+    // }
 
-    public getSteps(): Step[] {
-        return this.steps;
-    }
+    // public getSteps(): Step[] {
+    //     return this.steps;
+    // }
 
-    private getNextEmptyCell(): [number, number] | null {
+    private static getNextEmptyCell(notes: Notes): [number, number] | null {
         let minOptions: number = 9;
         let nextCell: null | [number, number] = null;
         for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 9; c++) {
-                if (this.notes[r][c] === null || this.notes[r][c] === undefined) {
+                if (notes[r][c] === null || notes[r][c] === undefined) {
                     continue;
                 }
-                const options = this.notes[r][c]?.length;
+                const options = notes[r][c]?.length;
                 if (options !== undefined && options < minOptions) {
                     minOptions = options;
                     nextCell = [r, c];
@@ -188,8 +195,8 @@ export class SudokuSolver {
         return nextCell;
     }
 
-    private boxCheck = (): Step | null => {
-        for (const box of this.boxes) {
+    private static boxCheck = (notes: Notes): Step | null => {
+        for (const box of SudokuSolver.boxes) {
             for (let option = 1; option <= 9; option++) {
                 let cnt = 0;
                 const step: Step = {
@@ -202,10 +209,10 @@ export class SudokuSolver {
                 };
                 for (let r = box[0]; r < box[0] + 3; r++) {
                     for (let c = box[1]; c < box[1] + 3; c++) {
-                        if (this.notes[r][c] === null || this.notes[r][c] === undefined) {
+                        if (notes[r][c] === null || notes[r][c] === undefined) {
                             continue;
                         }
-                        if (this.notes[r][c]?.includes(option)) {
+                        if (notes[r][c]?.includes(option)) {
                             cnt += 1;
                             [step.row, step.col, step.value] = [r, c, option];
                         }
@@ -219,7 +226,7 @@ export class SudokuSolver {
         return null;
     };
 
-    private rowCheck = (): Step | null => {
+    private static rowCheck = (notes: Notes): Step | null => {
         for (let r = 0; r < 9; r++) {
             let cnt = 0;
             const step: Step = {
@@ -232,10 +239,10 @@ export class SudokuSolver {
             };
             for (let option = 1; option <= 9; option++) {
                 for (let c = 0; c < 9; c++) {
-                    if (this.notes[r][c] === null || this.notes[r][c] === undefined) {
+                    if (notes[r][c] === null || notes[r][c] === undefined) {
                         continue;
                     }
-                    if (this.notes[r][c]?.includes(option)) {
+                    if (notes[r][c]?.includes(option)) {
                         cnt += 1;
                         [step.row, step.col, step.value] = [r, c, option];
                     }
@@ -248,7 +255,7 @@ export class SudokuSolver {
         return null;
     };
 
-    private colCheck = (): Step | null => {
+    private static colCheck = (notes: Notes): Step | null => {
         for (let c = 0; c < 9; c++) {
             let cnt = 0;
             const step: Step = {
@@ -261,10 +268,10 @@ export class SudokuSolver {
             };
             for (let option = 1; option <= 9; option++) {
                 for (let r = 0; r < 9; r++) {
-                    if (this.notes[r][c] === null || this.notes[r][c] === undefined) {
+                    if (notes[r][c] === null || notes[r][c] === undefined) {
                         continue;
                     }
-                    if (this.notes[r][c]?.includes(option)) {
+                    if (notes[r][c]?.includes(option)) {
                         cnt += 1;
                         [step.row, step.col, step.value] = [r, c, option];
                     }
@@ -277,145 +284,158 @@ export class SudokuSolver {
         return null;
     };
 
-    private lastPossibleNumberCheck() {
+    private static lastPossibleNumberCheck() {
         // ...
     }
 
-    /** Checks if a cell with no options exists (does not check if the grid is a valid configuration!). */
-    private isSolvable(): boolean {
-        for (let r = 0; r < 9; r++) {
-            for (let c = 0; c < 9; c++) {
-                if (this.notes[r][c] === null || this.notes[r][c] === undefined) {
-                    continue;
-                }
-                if (this.notes[r][c]?.length === 0) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
+    // /** Checks if a cell with no options exists (does not check if the grid is a valid configuration!). */
+    // private isSolvable(): boolean {
+    //     for (let r = 0; r < 9; r++) {
+    //         for (let c = 0; c < 9; c++) {
+    //             if (this.notes[r][c] === null || this.notes[r][c] === undefined) {
+    //                 continue;
+    //             }
+    //             if (this.notes[r][c]?.length === 0) {
+    //                 return false;
+    //             }
+    //         }
+    //     }
+    //     return true;
+    // }
 
-    public isSolved(): boolean {
-        return !this.grid.flat().includes(0);
-    }
+    // public isSolved(): boolean {
+    //     return !this.grid.flat().includes(0);
+    // }
 
-    public isValid(): boolean {
-        for (let r = 0; r < 9; r++) {
-            for (let c = 0; c < 9; c++) {
-                const temp = this.grid[r][c];
-                this.grid[r][c] = 0;
-                if (this.conflict(r, c, temp)) {
-                    return false;
-                }
-                this.grid[r][c] = temp;
-            }
-        }
-        return true;
-    }
+    // public isValid(): boolean {
+    //     for (let r = 0; r < 9; r++) {
+    //         for (let c = 0; c < 9; c++) {
+    //             const temp = this.grid[r][c];
+    //             this.grid[r][c] = 0;
+    //             if (this.conflict(r, c, temp)) {
+    //                 return false;
+    //             }
+    //             this.grid[r][c] = temp;
+    //         }
+    //     }
+    //     return true;
+    // }
 
-    private getSolvers(): (() => Step | null)[] {
+    private static getSolvers(
+        solverOptions: Solvers | undefined
+    ): ((notes: Notes) => Step | null)[] {
         const result = [];
-        if (this.solverOptions === undefined || this.solverOptions.rowCheck.enabled) {
-            result.push(this.rowCheck);
+        if (solverOptions === undefined || solverOptions.rowCheck.enabled) {
+            result.push(SudokuSolver.rowCheck);
         }
-        if (this.solverOptions === undefined || this.solverOptions.colCheck.enabled) {
-            result.push(this.colCheck);
+        if (solverOptions === undefined || solverOptions.colCheck.enabled) {
+            result.push(SudokuSolver.colCheck);
         }
-        if (this.solverOptions === undefined || this.solverOptions.boxCheck.enabled) {
-            result.push(this.boxCheck);
+        if (solverOptions === undefined || solverOptions.boxCheck.enabled) {
+            result.push(SudokuSolver.boxCheck);
         }
         return result;
     }
 
-    public solve() {
-        this.step();
-    }
+    // public solve() {
+    //     this.step();
+    // }
 
-    public step() {
-        this.calculateNotes();
-        console.log(this.steps.map((step) => step.value).join());
-        if (this.isSolved()) {
-            console.log(
-                "solved",
-                this.isValid(),
-                this.steps.length,
-                this.getTree().getRoot().getSize()
-            );
-            return true;
+    public static step(
+        grid: number[][],
+        solverOptions?: Solvers | undefined
+    ): [Step | boolean, number[][]] {
+        const copyGrid = grid.map((r) => r.slice());
+        const notes = SudokuSolver.calculateNotes(grid);
+        // console.log(this.steps.map((step) => step.value).join());
+        if (SudokuChecker.isSolved(grid)) {
+            console.log("solved", SudokuChecker.isValid(grid));
+            return [true, copyGrid];
         }
         // console.log(this.solverOptions);
-        if (!this.isSolvable()) {
-            console.log("not a valid grid, backtrack");
-            const goBack = true;
-            while (goBack) {
-                const lastStep = this.steps.slice(-1)[0];
-                if (this.solveTree.parent !== null) {
-                    this.solveTree = this.solveTree.parent;
-                }
-                if (lastStep === undefined) {
-                    return this;
-                }
-                if (
-                    lastStep.method === "backtrack" &&
-                    lastStep.backtrackIdx < lastStep.backtrackValues.length - 1
-                ) {
-                    const newstep: Step = {
-                        ...lastStep,
-                        value: lastStep.backtrackValues[lastStep.backtrackIdx + 1],
-                        backtrackIdx: lastStep.backtrackIdx + 1,
-                    };
-                    this.grid[newstep.row][newstep.col] = newstep.value;
-                    this.steps.push(newstep);
-                    const child = new Tree(this.solveTree, -1);
-                    this.solveTree.children.push(child);
-                    this.solveTree = child;
-                    return this;
-                } else {
-                    const newstep: Step = {
-                        ...lastStep,
-                        value: 0,
-                    };
-                    this.steps.push(newstep);
-                    this.grid[lastStep.row][lastStep.col] = 0;
-                }
-            }
-        }
-        const solvers: (() => Step | null)[] = this.getSolvers(); //[this.rowCheck, this.colCheck, this.boxCheck];
+        // if (!SudokuChecker.isSolvable(notes)) {
+        //     console.log("not a valid grid, backtrack");
+        //     const goBack = true;
+        //     while (goBack) {
+        //         const lastStep = this.steps.slice(-1)[0];
+        //         if (this.solveTree.parent !== null) {
+        //             this.solveTree = this.solveTree.parent;
+        //         }
+        //         if (lastStep === undefined) {
+        //             return [false, this.grid];
+        //         }
+        //         if (
+        //             lastStep.method === "backtrack" &&
+        //             lastStep.backtrackIdx < lastStep.backtrackValues.length - 1
+        //         ) {
+        //             const newstep: Step = {
+        //                 ...lastStep,
+        //                 value: lastStep.backtrackValues[lastStep.backtrackIdx + 1],
+        //                 backtrackIdx: lastStep.backtrackIdx + 1,
+        //             };
+        //             this.grid[newstep.row][newstep.col] = newstep.value;
+        //             this.steps.push(newstep);
+        //             const child = new Tree(this.solveTree, -1);
+        //             this.solveTree.children.push(child);
+        //             this.solveTree = child;
+        //             return [newstep, this.grid];
+        //         } else {
+        //             const newstep: Step = {
+        //                 ...lastStep,
+        //                 value: 0,
+        //             };
+        //             this.steps.push(newstep);
+        //             this.grid[lastStep.row][lastStep.col] = 0;
+        //             return [newstep, this.grid];
+        //         }
+        //     }
+        // }
+        const solvers: ((notes: Notes) => Step | null)[] = SudokuSolver.getSolvers(solverOptions); //[this.rowCheck, this.colCheck, this.boxCheck];
         // const solvers: (() => Step | null)[] = [this.rowCheck, this.colCheck, this.boxCheck];
         for (const solver of solvers) {
-            const result = solver();
+            const result = solver(notes);
             if (result !== null) {
-                this.grid[result.row][result.col] = result.value;
-                this.steps.push(result);
-                return this;
+                copyGrid[result.row][result.col] = result.value;
+                // this.steps.push(result);
+                return [result, copyGrid];
             }
         }
 
         // Backtrack
-        if (this.solverOptions === undefined || this.solverOptions.backtrack.enabled) {
-            console.log("No simple solution, start backtracking!", this.getNextEmptyCell());
-            const emptyCell = this.getNextEmptyCell();
-            const r = emptyCell ? emptyCell[0] : -1;
-            const c = emptyCell ? emptyCell[1] : -1;
-            if (emptyCell !== null && this.notes[r][c] !== null) {
-                this.grid[r][c] = this.notes[r][c][0];
-                this.steps.push({
-                    row: r,
-                    col: c,
-                    value: this.notes[r][c][0],
-                    method: "backtrack",
-                    backtrackValues: this.notes[r][c],
-                    backtrackIdx: 0,
-                });
-                const child = new Tree(this.solveTree, this.notes[r][c][0]);
-                this.solveTree.children.push(child);
-                this.solveTree = child;
-                return this;
-            }
-        }
+        // if (this.solverOptions === undefined || this.solverOptions.backtrack.enabled) {
+        //     console.log("No simple solution, start backtracking!", this.getNextEmptyCell());
+        //     const emptyCell = this.getNextEmptyCell();
+        //     const r = emptyCell ? emptyCell[0] : -1;
+        //     const c = emptyCell ? emptyCell[1] : -1;
+        //     if (emptyCell !== null && this.notes[r][c] !== null) {
+        //         this.grid[r][c] = this.notes[r][c][0];
+
+        //         this.steps.push({
+        //             row: r,
+        //             col: c,
+        //             value: this.notes[r][c][0],
+        //             method: "backtrack",
+        //             backtrackValues: this.notes[r][c],
+        //             backtrackIdx: 0,
+        //         });
+        //         const child = new Tree(this.solveTree, this.notes[r][c][0]);
+        //         this.solveTree.children.push(child);
+        //         this.solveTree = child;
+        //         return [
+        //             {
+        //                 row: r,
+        //                 col: c,
+        //                 value: this.notes[r][c][0],
+        //                 method: "backtrack",
+        //                 backtrackValues: this.notes[r][c],
+        //                 backtrackIdx: 0,
+        //             },
+        //             this.grid,
+        //         ];
+        //     }
+        // }
 
         console.log("Cannot solve further");
-        return false;
+        return [false, copyGrid];
     }
 }
