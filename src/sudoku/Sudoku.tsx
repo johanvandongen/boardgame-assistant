@@ -45,6 +45,16 @@ export function Sudoku() {
         });
     };
 
+    const handlePrev = () => {
+        setSud((prev) => {
+            if (prev.steps.length <= 0) {
+                return prev;
+            }
+            const grid = SudokuSolver.prev(prev.grid, prev.steps);
+            return { ...prev, grid: grid, steps: prev.steps.slice(0, -1) };
+        });
+    };
+
     const handleSolvers = (label: string) => {
         setSud((prev) => ({
             ...prev,
@@ -61,16 +71,12 @@ export function Sudoku() {
                     <SudokuGrid sudoku={sud.grid} showNotes={showNotes} steps={sud.steps} />
                 </BoardGeneratorContainer>
                 <ButtonContainer>
-                    <Button
-                        variant="outlined"
-                        onClick={() => {
-                            handleStep();
-                        }}
-                    >
+                    <Button variant="outlined" onClick={handlePrev}>
+                        Prev
+                    </Button>
+                    <Button variant="outlined" onClick={handleStep}>
                         Step
                     </Button>
-                    <p>slider</p>
-                    <p>prev, next</p>
                 </ButtonContainer>
             </div>
             <div>

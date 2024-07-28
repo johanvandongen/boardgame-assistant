@@ -207,6 +207,16 @@ export abstract class SudokuSolver {
         return null;
     }
 
+    public static prev(grid: number[][], steps: Step[]): number[][] {
+        const copyGrid = grid.map((r) => r.slice());
+        if (steps.length <= 0) {
+            return copyGrid;
+        }
+        const lastStep = steps.slice(-1)[0];
+        copyGrid[lastStep.row][lastStep.col] = 0;
+        return copyGrid;
+    }
+
     /** Returns false if cannot be solved further, true, if solved, step otherwise. */
     public static step(
         grid: number[][],
