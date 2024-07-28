@@ -33,6 +33,18 @@ class Tree<T> {
         return root;
     }
 
+    getStr(): string {
+        if (this.children.length === 0) {
+            console.log(this.value);
+            return (this.value as number).toString();
+        }
+        let str = this.parent === null ? "root: " : (this.value as number).toString();
+        for (const child of this.children) {
+            str += child.getStr();
+        }
+        return str;
+    }
+
     getSize(): number {
         if (this.children.length === 0) {
             return 1;
@@ -64,7 +76,7 @@ export class SudokuSolver {
     private solverOptions: Solvers | undefined = undefined;
 
     constructor(grid: number[][], notes?: Notes, steps?: Step[], tree?: Tree<number>) {
-        this.grid = grid;
+        this.grid = grid.map((r) => r.slice());
         if (notes === undefined) {
             const g = [];
             for (let r = 0; r < 9; r++) {
@@ -74,7 +86,7 @@ export class SudokuSolver {
         } else {
             this.notes = notes;
         }
-        this.steps = steps === undefined ? [] : steps;
+        this.steps = steps === undefined ? [] : JSON.parse(JSON.stringify(steps));
         this.solveTree = tree === undefined ? new Tree(null, -1) : tree;
     }
 
@@ -143,7 +155,7 @@ export class SudokuSolver {
     }
 
     public getNotes() {
-        this.calculateNotes();
+        // this.calculateNotes();
         return this.notes;
     }
 
@@ -316,9 +328,20 @@ export class SudokuSolver {
         return result;
     }
 
+    public solve() {
+        this.step();
+    }
+
     public step() {
+        this.calculateNotes();
+        console.log(this.steps.map((step) => step.value).join());
         if (this.isSolved()) {
-            console.log("solved", this.isValid(), this.getTree().getRoot().getSize());
+            console.log(
+                "solved",
+                this.isValid(),
+                this.steps.length,
+                this.getTree().getRoot().getSize()
+            );
             return true;
         }
         // console.log(this.solverOptions);
@@ -326,7 +349,7 @@ export class SudokuSolver {
             console.log("not a valid grid, backtrack");
             const goBack = true;
             while (goBack) {
-                const lastStep = this.steps.pop();
+                const lastStep = this.steps.slice(-1)[0];
                 if (this.solveTree.parent !== null) {
                     this.solveTree = this.solveTree.parent;
                 }
@@ -349,6 +372,11 @@ export class SudokuSolver {
                     this.solveTree = child;
                     return this;
                 } else {
+                    const newstep: Step = {
+                        ...lastStep,
+                        value: 0,
+                    };
+                    this.steps.push(newstep);
                     this.grid[lastStep.row][lastStep.col] = 0;
                 }
             }
@@ -365,7 +393,7 @@ export class SudokuSolver {
         }
 
         // Backtrack
-        if (this.solverOptions?.backtrack.enabled) {
+        if (this.solverOptions === undefined || this.solverOptions.backtrack.enabled) {
             console.log("No simple solution, start backtracking!", this.getNextEmptyCell());
             const emptyCell = this.getNextEmptyCell();
             const r = emptyCell ? emptyCell[0] : -1;

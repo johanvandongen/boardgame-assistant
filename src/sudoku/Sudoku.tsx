@@ -14,9 +14,9 @@ export interface Solvers {
     backtrack: Solver;
 }
 const solvers: Solvers = {
-    rowCheck: { enabled: true, label: "row check" },
-    colCheck: { enabled: true, label: "col check" },
-    boxCheck: { enabled: true, label: "box check" },
+    rowCheck: { enabled: false, label: "row check" },
+    colCheck: { enabled: false, label: "col check" },
+    boxCheck: { enabled: false, label: "box check" },
     backtrack: { enabled: true, label: "backtrack" },
 };
 
@@ -36,15 +36,26 @@ export function Sudoku() {
     const [solver, setSolvers] = useState<Solvers>(solvers);
     const [solveSize, setSolveSize] = useState<number | undefined>(undefined);
     const [showNotes, setShowNotes] = useState(false);
+    // const [steps, setSteps] = useState([]);
 
     const handleStep = () => {
         setSudoku((prev) => {
-            const n: SudokuSolver | boolean = prev.step();
+            console.log(JSON.stringify(prev.getSteps()));
+            const copy = new SudokuSolver(
+                prev.getGrid(),
+                undefined,
+                prev.getSteps(),
+                prev.getTree()
+            );
+            // console.log(JSON.stringify(copy));
+            const n: SudokuSolver | boolean = copy.step();
             if (n === true || n === false) {
                 return prev;
             }
-            const result = new SudokuSolver(n.getGrid(), undefined, n.getSteps(), n.getTree());
-            return result;
+            // console.log("new", n);
+            // console.log(n.getTree().getRoot().getStr());
+            // const result = new SudokuSolver(n.getGrid(), undefined, n.getSteps(), n.getTree());
+            return n;
         }); // create new class instance, because react
     };
 
@@ -75,7 +86,14 @@ export function Sudoku() {
                     <SudokuGrid sudoku={sudoku} showNotes={showNotes} />
                 </BoardGeneratorContainer>
                 <ButtonContainer>
-                    <Button variant="outlined" onClick={handleStep}>
+                    <Button
+                        variant="outlined"
+                        onClick={() => {
+                            handleStep();
+                            // handleStep();
+                            // handleStep();
+                        }}
+                    >
                         Step
                     </Button>
                     <p>slider</p>
