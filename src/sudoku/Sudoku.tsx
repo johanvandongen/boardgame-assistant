@@ -37,7 +37,7 @@ export function Sudoku() {
 
     const handleStep = () => {
         setSud((prev) => {
-            const [step, grid] = SudokuSolver.step(prev.grid, prev.options);
+            const [step, grid] = SudokuSolver.step(prev.grid, prev.steps, prev.options);
             if (!(typeof step === "boolean")) {
                 return { grid: grid, steps: [...prev.steps, step], options: prev.options };
             }
