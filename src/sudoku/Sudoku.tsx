@@ -9,9 +9,9 @@ export interface Solver {
 }
 
 const solvers: Solver[] = [
-    { enabled: false, label: "row check" },
-    { enabled: false, label: "col check" },
-    { enabled: false, label: "box check" },
+    { enabled: true, label: "row check" },
+    { enabled: true, label: "col check" },
+    { enabled: true, label: "box check" },
     { enabled: true, label: "backtrack" },
 ];
 
@@ -87,6 +87,7 @@ export function Sudoku() {
                             key={solver.label}
                             control={
                                 <Checkbox
+                                    sx={{ paddingTop: 0, paddingBottom: 0 }}
                                     checked={solver.enabled}
                                     onChange={() => handleSolvers(solver.label)}
                                 />
@@ -96,12 +97,12 @@ export function Sudoku() {
                     ))}
                     <FormControlLabel
                         key={"Last remaining"}
-                        control={<Checkbox disabled />}
+                        control={<Checkbox sx={{ paddingTop: 0, paddingBottom: 0 }} disabled />}
                         label={"Last remaining"}
                     />
                     <FormControlLabel
                         key={"naked pair"}
-                        control={<Checkbox disabled />}
+                        control={<Checkbox sx={{ paddingTop: 0, paddingBottom: 0 }} disabled />}
                         label={"naked pair"}
                     />
                 </FormGroup>
@@ -115,8 +116,18 @@ export function Sudoku() {
                     label={"show notes"}
                 ></FormControlLabel>
                 <div>
-                    <p>Metadata</p>
+                    <p>Solution info</p>
                     <p>Solve size: {sud.steps.length}</p>
+                    <p>
+                        {/* Last step: {sud.steps.length > 0 && sud.steps.slice(-1)[0].method} */}
+                    </p>
+                    <p>Last step</p>
+                    {sud.steps.length > 0 && (
+                        <p>
+                            {sud.steps.slice(-1)[0].value} using {sud.steps.slice(-1)[0].method}{" "}
+                            method
+                        </p>
+                    )}
                 </div>
                 {/* <p>check notes version</p> */}
             </div>
