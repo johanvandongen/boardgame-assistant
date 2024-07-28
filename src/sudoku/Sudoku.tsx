@@ -7,18 +7,13 @@ export interface Solver {
     enabled: boolean;
     label: string;
 }
-export interface Solvers {
-    boxCheck: Solver;
-    rowCheck: Solver;
-    colCheck: Solver;
-    backtrack: Solver;
-}
-const solvers: Solvers = {
-    rowCheck: { enabled: false, label: "row check" },
-    colCheck: { enabled: false, label: "col check" },
-    boxCheck: { enabled: false, label: "box check" },
-    backtrack: { enabled: true, label: "backtrack" },
-};
+
+const solvers: Solver[] = [
+    { enabled: false, label: "row check" },
+    { enabled: false, label: "col check" },
+    { enabled: false, label: "box check" },
+    { enabled: true, label: "backtrack" },
+];
 
 const grid = [
     [0, 0, 4, 0, 0, 1, 0, 6, 0],
@@ -32,9 +27,8 @@ const grid = [
     [0, 0, 0, 0, 0, 0, 3, 0, 5],
 ];
 export function Sudoku() {
-    const [solver, setSolvers] = useState<Solvers>(solvers);
     const [showNotes, setShowNotes] = useState(false);
-    const [sud, setSud] = useState<{ grid: number[][]; steps: Step[]; options: Solvers }>({
+    const [sud, setSud] = useState<{ grid: number[][]; steps: Step[]; options: Solver[] }>({
         grid: grid,
         steps: [],
         options: solvers,
@@ -51,16 +45,13 @@ export function Sudoku() {
         });
     };
 
-    const handleSolvers = (solverToUpdate: Solver) => {
-        setSolvers((prev) => {
-            const res: Solvers = { ...prev };
-            for (const solver in prev) {
-                if (prev[solver as keyof typeof prev].label === solverToUpdate.label) {
-                    res[solver as keyof typeof prev].enabled = !solverToUpdate.enabled;
-                }
-            }
-            return { ...res };
-        });
+    const handleSolvers = (label: string) => {
+        setSud((prev) => ({
+            ...prev,
+            options: prev.options.map((solver) =>
+                solver.label === label ? { ...solver, enabled: !solver.enabled } : solver
+            ),
+        }));
     };
 
     return (
@@ -85,18 +76,16 @@ export function Sudoku() {
             <div>
                 <p>Solvers applied</p>
                 <FormGroup>
-                    {Object.keys(solver).map((key) => (
+                    {sud.options.map((solver) => (
                         <FormControlLabel
-                            key={solvers[key as keyof typeof solvers].label}
+                            key={solver.label}
                             control={
                                 <Checkbox
-                                    checked={solvers[key as keyof typeof solvers].enabled}
-                                    onChange={() =>
-                                        handleSolvers(solvers[key as keyof typeof solvers])
-                                    }
+                                    checked={solver.enabled}
+                                    onChange={() => handleSolvers(solver.label)}
                                 />
                             }
-                            label={solvers[key as keyof typeof solvers].label}
+                            label={solver.label}
                         />
                     ))}
                     <FormControlLabel
