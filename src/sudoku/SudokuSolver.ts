@@ -179,9 +179,32 @@ export abstract class SudokuSolver {
                     break;
                 case "box check":
                     result.push(SudokuSolver.boxCheck);
+                    break;
+                case "backtrack":
+                    result.push(SudokuSolver.bruteforceChoice);
+                    break;
             }
         }
         return result;
+    }
+
+    private static bruteforceChoice(notes: Notes): Step | null {
+        console.log("backtracking!", SudokuSolver.getNextEmptyCell(notes));
+        const emptyCell = SudokuSolver.getNextEmptyCell(notes);
+        const r = emptyCell ? emptyCell[0] : -1;
+        const c = emptyCell ? emptyCell[1] : -1;
+        if (emptyCell !== null && notes[r][c] !== null) {
+            const step: Step = {
+                row: r,
+                col: c,
+                value: notes[r][c][0],
+                method: "backtrack",
+                backtrackValues: notes[r][c],
+                backtrackIdx: 0,
+            };
+            return step;
+        }
+        return null;
     }
 
     /** Returns false if cannot be solved further, true, if solved, step otherwise. */
@@ -191,78 +214,50 @@ export abstract class SudokuSolver {
         solverOptions: Solver[]
     ): [Step | boolean, number[][]] {
         const copyGrid = grid.map((r) => r.slice());
-        const copySteps = steps.map((step) => ({
+        const copySteps: Step[] = steps.map((step) => ({
             ...step,
             backtrackValues: [...step.backtrackValues],
         }));
         const notes = SudokuSolver.calculateNotes(grid);
+
+        // Grid already solved
         if (SudokuChecker.isSolved(grid)) {
             console.log("solved", SudokuChecker.isValid(grid), steps.length);
             return [true, copyGrid];
         }
 
-        if (!SudokuChecker.isSolvable(notes)) {
+        // Backtracking
+        const lastStep = copySteps.slice(-1)[0];
+        if (!SudokuChecker.isSolvable(notes) && lastStep !== undefined) {
             console.log("not a valid grid, backtrack");
-            const goBack = true;
-            while (goBack) {
-                const lastStep = copySteps.slice(-1)[0];
-                if (lastStep === undefined) {
-                    break;
-                }
-                if (
-                    lastStep.method === "backtrack" &&
-                    lastStep.backtrackIdx < lastStep.backtrackValues.length - 1
-                ) {
-                    const newstep: Step = {
-                        ...lastStep,
-                        value: lastStep.backtrackValues[lastStep.backtrackIdx + 1],
-                        backtrackIdx: lastStep.backtrackIdx + 1,
-                    };
-                    copyGrid[newstep.row][newstep.col] = newstep.value;
-                    return [newstep, copyGrid];
-                } else {
-                    const newstep: Step = {
-                        ...lastStep,
-                        value: 0,
-                    };
-                    copyGrid[lastStep.row][lastStep.col] = 0;
-                    return [newstep, copyGrid];
-                }
+            if (
+                lastStep.method === "backtrack" &&
+                lastStep.backtrackIdx < lastStep.backtrackValues.length - 1
+            ) {
+                const newstep: Step = {
+                    ...lastStep,
+                    value: lastStep.backtrackValues[lastStep.backtrackIdx + 1],
+                    backtrackIdx: lastStep.backtrackIdx + 1,
+                };
+                copyGrid[newstep.row][newstep.col] = newstep.value;
+                return [newstep, copyGrid];
+            } else {
+                const newstep: Step = {
+                    ...lastStep,
+                    value: 0,
+                };
+                copyGrid[lastStep.row][lastStep.col] = 0;
+                return [newstep, copyGrid];
             }
         }
 
-        const solvers: ((notes: Notes) => Step | null)[] = SudokuSolver.getSolvers(solverOptions); //[this.rowCheck, this.colCheck, this.boxCheck];
-        // const solvers: (() => Step | null)[] = [this.rowCheck, this.colCheck, this.boxCheck];
+        // Apply solvers
+        const solvers: ((notes: Notes) => Step | null)[] = SudokuSolver.getSolvers(solverOptions);
         for (const solver of solvers) {
             const result = solver(notes);
             if (result !== null) {
                 copyGrid[result.row][result.col] = result.value;
-                // this.steps.push(result);
                 return [result, copyGrid];
-            }
-        }
-
-        // Backtrack
-        if (solverOptions.find((solver) => solver.label === "backtrack")?.enabled) {
-            console.log(
-                "No simple solution, start backtracking!",
-                SudokuSolver.getNextEmptyCell(notes)
-            );
-            const emptyCell = SudokuSolver.getNextEmptyCell(notes);
-            const r = emptyCell ? emptyCell[0] : -1;
-            const c = emptyCell ? emptyCell[1] : -1;
-            if (emptyCell !== null && notes[r][c] !== null) {
-                copyGrid[r][c] = notes[r][c][0];
-
-                const step: Step = {
-                    row: r,
-                    col: c,
-                    value: notes[r][c][0],
-                    method: "backtrack",
-                    backtrackValues: notes[r][c],
-                    backtrackIdx: 0,
-                };
-                return [step, copyGrid];
             }
         }
 

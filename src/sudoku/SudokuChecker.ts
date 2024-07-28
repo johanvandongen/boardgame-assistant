@@ -60,7 +60,7 @@ export class SudokuChecker {
             for (let c = 0; c < 9; c++) {
                 const temp = copyGrid[r][c];
                 copyGrid[r][c] = 0;
-                if (SudokuChecker.conflict(grid, r, c, temp)) {
+                if (SudokuChecker.conflict(copyGrid, r, c, temp)) {
                     return false;
                 }
                 copyGrid[r][c] = temp;
