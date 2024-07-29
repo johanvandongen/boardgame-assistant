@@ -156,9 +156,9 @@ export abstract class SudokuSolver {
         return null;
     };
 
-    private static lastPossibleNumberCheck() {
-        // ...
-    }
+    // private static lastPossibleNumberCheck() {
+    //     // ...
+    // }
 
     private static getSolvers(solverOptions: Solver[]): ((notes: Notes) => Step | null)[] {
         const result: ((notes: Notes) => Step | null)[] = [];
@@ -193,13 +193,14 @@ export abstract class SudokuSolver {
         const emptyCell = SudokuSolver.getNextEmptyCell(notes);
         const r = emptyCell ? emptyCell[0] : -1;
         const c = emptyCell ? emptyCell[1] : -1;
-        if (emptyCell !== null && notes[r][c] !== null) {
+        const cellNotes = notes[r][c];
+        if (emptyCell !== null && cellNotes !== null) {
             const step: Step = {
                 row: r,
                 col: c,
-                value: notes[r][c][0],
+                value: cellNotes[0],
                 method: "backtrack",
-                backtrackValues: notes[r][c],
+                backtrackValues: cellNotes,
                 backtrackIdx: 0,
             };
             return step;
