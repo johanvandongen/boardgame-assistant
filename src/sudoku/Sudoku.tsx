@@ -1,7 +1,17 @@
 import { SudokuGrid } from "./SudokuGrid";
-import { Button, Checkbox, FormControlLabel, FormGroup, styled, Switch } from "@mui/material";
+import {
+    Button,
+    Checkbox,
+    FormControlLabel,
+    FormGroup,
+    IconButton,
+    styled,
+    Switch,
+    useTheme,
+} from "@mui/material";
 import { Step, SudokuSolver } from "./SudokuSolver";
 import { useState } from "react";
+import { ArrowBack, ArrowForward } from "@mui/icons-material";
 
 export interface Solver {
     enabled: boolean;
@@ -27,6 +37,7 @@ const grid = [
     [0, 0, 0, 0, 0, 0, 3, 0, 5],
 ];
 export function Sudoku() {
+    const theme = useTheme();
     const [showNotes, setShowNotes] = useState(false);
     const [currentCell, setCurrentCell] = useState<[number, number]>([-1, -1]);
     const [sud, setSud] = useState<{ grid: number[][]; steps: Step[]; options: Solver[] }>({
@@ -66,9 +77,35 @@ export function Sudoku() {
         }));
     };
 
+    const handleSetSudoku = (num: number) => {
+        setSud((prev) => ({
+            ...prev,
+            grid: prev.grid.map((row, rowIdx) =>
+                rowIdx === currentCell[0]
+                    ? row.map((col, colIdx) => (colIdx === currentCell[1] ? num : col))
+                    : row
+            ),
+        }));
+    };
+
     return (
         <Container>
             <div>
+                <InputContainer>
+                    {/* <Button sx={{ minWidth: 0 }}>C</Button> */}
+                    <Button sx={{ minWidth: 0 }} onClick={() => handleSetSudoku(0)}>
+                        &#9003;
+                    </Button>
+                    {[...Array(9).keys()].map((num) => (
+                        <Button
+                            key={"numberinput" + num}
+                            sx={{ minWidth: 0 }}
+                            onClick={() => handleSetSudoku(num + 1)}
+                        >
+                            {num + 1}
+                        </Button>
+                    ))}
+                </InputContainer>
                 <BoardGeneratorContainer>
                     <SudokuGrid
                         sudoku={sud.grid}
@@ -79,12 +116,12 @@ export function Sudoku() {
                     />
                 </BoardGeneratorContainer>
                 <ButtonContainer>
-                    <Button variant="outlined" onClick={handlePrev}>
-                        Prev
-                    </Button>
-                    <Button variant="outlined" onClick={handleStep}>
-                        Step
-                    </Button>
+                    <IconButton sx={{ color: theme.palette.primary.main }} onClick={handlePrev}>
+                        <ArrowBack />
+                    </IconButton>
+                    <IconButton sx={{ color: theme.palette.primary.main }} onClick={handleStep}>
+                        <ArrowForward />
+                    </IconButton>
                 </ButtonContainer>
             </div>
             <div>
@@ -140,6 +177,11 @@ export function Sudoku() {
     );
 }
 
+const InputContainer = styled("div")(() => ({
+    width: "100%",
+    display: "flex",
+}));
+
 const Container = styled("div")(({ theme }) => ({
     display: "flex",
     flexDirection: "column",
@@ -155,11 +197,13 @@ const Container = styled("div")(({ theme }) => ({
 
 const ButtonContainer = styled("div")(() => ({
     display: "flex",
+    justifyContent: "center",
     gap: "1rem",
 }));
 
 const BoardGeneratorContainer = styled("div")(() => ({
     height: "100%",
+    // width: "100%",
     aspectRatio: "1 / 1",
     display: "flex",
     gap: "1rem",
