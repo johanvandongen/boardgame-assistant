@@ -28,6 +28,7 @@ const grid = [
 ];
 export function Sudoku() {
     const [showNotes, setShowNotes] = useState(false);
+    const [currentCell, setCurrentCell] = useState<[number, number]>([-1, -1]);
     const [sud, setSud] = useState<{ grid: number[][]; steps: Step[]; options: Solver[] }>({
         grid: grid,
         steps: [],
@@ -43,6 +44,7 @@ export function Sudoku() {
             }
             return prev;
         });
+        setCurrentCell([-1, -1]);
     };
 
     const handlePrev = () => {
@@ -68,7 +70,13 @@ export function Sudoku() {
         <Container>
             <div>
                 <BoardGeneratorContainer>
-                    <SudokuGrid sudoku={sud.grid} showNotes={showNotes} steps={sud.steps} />
+                    <SudokuGrid
+                        sudoku={sud.grid}
+                        showNotes={showNotes}
+                        steps={sud.steps}
+                        currentCell={currentCell}
+                        setCurrentCell={setCurrentCell}
+                    />
                 </BoardGeneratorContainer>
                 <ButtonContainer>
                     <Button variant="outlined" onClick={handlePrev}>
@@ -118,9 +126,6 @@ export function Sudoku() {
                 <div>
                     <p>Solution info</p>
                     <p>Solve size: {sud.steps.length}</p>
-                    <p>
-                        {/* Last step: {sud.steps.length > 0 && sud.steps.slice(-1)[0].method} */}
-                    </p>
                     <p>Last step</p>
                     {sud.steps.length > 0 && (
                         <p>

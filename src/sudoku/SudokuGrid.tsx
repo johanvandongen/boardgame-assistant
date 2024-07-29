@@ -1,13 +1,23 @@
 import * as React from "react";
 import { Step, SudokuSolver } from "./SudokuSolver";
+import { useTheme } from "@mui/material";
 
 export interface ISudokuGridProps {
     sudoku: number[][];
     steps: Step[];
     showNotes: boolean;
+    currentCell: [number, number];
+    setCurrentCell: (cell: [number, number]) => void;
 }
 
-export function SudokuGrid({ sudoku, steps, showNotes }: ISudokuGridProps) {
+export function SudokuGrid({
+    sudoku,
+    steps,
+    showNotes,
+    currentCell,
+    setCurrentCell,
+}: ISudokuGridProps) {
+    const theme = useTheme();
     const notes = SudokuSolver.calculateNotes(sudoku);
     const lastStep = steps.slice(-1)[0];
     const cells = 9;
@@ -16,14 +26,35 @@ export function SudokuGrid({ sudoku, steps, showNotes }: ISudokuGridProps) {
     const outerStrokeWidth = 2;
     const innerStrokeWidth = 1;
     return (
-        <svg viewBox={`0 0 ${gridSize + outerStrokeWidth} ${gridSize + outerStrokeWidth}`}>
+        <svg
+            className="sudoku-grid"
+            onClick={(e) => {
+                const rootSVG = (e.target as HTMLElement).closest(".sudoku-grid");
+                if (rootSVG !== null) {
+                    const dim = rootSVG.getBoundingClientRect();
+                    const row = Math.floor(((e.clientY - dim.top) / dim.height) * 9);
+                    const col = Math.floor(((e.clientX - dim.left) / dim.width) * 9);
+                    setCurrentCell([row, col]);
+                }
+            }}
+            viewBox={`0 0 ${gridSize + outerStrokeWidth} ${gridSize + outerStrokeWidth}`}
+        >
             {lastStep !== undefined && (
                 <rect
-                    x={lastStep.col * cellSize}
-                    y={lastStep.row * cellSize}
+                    x={outerStrokeWidth / 2 + lastStep.col * cellSize}
+                    y={outerStrokeWidth / 2 + lastStep.row * cellSize}
                     width={cellSize}
                     height={cellSize}
-                    fill="green"
+                    fill={theme.palette.success.light}
+                ></rect>
+            )}
+            {currentCell[0] !== -1 && (
+                <rect
+                    x={outerStrokeWidth / 2 + currentCell[1] * cellSize}
+                    y={outerStrokeWidth / 2 + currentCell[0] * cellSize}
+                    width={cellSize}
+                    height={cellSize}
+                    fill={theme.palette.primary.light}
                 ></rect>
             )}
             {sudoku.map((row, r) =>
@@ -35,7 +66,7 @@ export function SudokuGrid({ sudoku, steps, showNotes }: ISudokuGridProps) {
                         textAnchor="middle"
                         dominantBaseline="middle"
                         fontWeight={600}
-                        fill={"black"}
+                        fill={theme.palette.mode === "light" ? "black" : "white"}
                     >
                         {val > 0 && val}
                     </text>
@@ -78,7 +109,7 @@ export function SudokuGrid({ sudoku, steps, showNotes }: ISudokuGridProps) {
                     <React.Fragment key={"line" + x}>
                         <line
                             key={"horizontal" + x}
-                            stroke="black"
+                            stroke={theme.palette.mode === "light" ? "black" : "white"}
                             strokeWidth={strokeWidth}
                             x1={0}
                             y1={outerStrokeWidth / 2 + x * cellSize}
@@ -87,7 +118,7 @@ export function SudokuGrid({ sudoku, steps, showNotes }: ISudokuGridProps) {
                         ></line>
                         <line
                             key={"vertical" + x}
-                            stroke="black"
+                            stroke={theme.palette.mode === "light" ? "black" : "white"}
                             strokeWidth={strokeWidth}
                             x1={outerStrokeWidth / 2 + x * cellSize}
                             y1={0}
