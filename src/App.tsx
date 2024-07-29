@@ -19,6 +19,7 @@ import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 import React from "react";
 import { ColorModeContext } from "./ThemeContext";
+import { Sudoku } from "./sudoku/Sudoku";
 
 export default function App() {
     type GameItem = {
@@ -28,10 +29,11 @@ export default function App() {
 
     const gameItems: GameItem[] = [
         { label: "catan", component: <Catan /> },
+        { label: "sudoku", component: <Sudoku /> },
         { label: "risk", component: null },
     ];
 
-    const [game, setGame] = useState<GameItem | null>(gameItems[0]);
+    const [game, setGame] = useState<GameItem | null>(gameItems[1]);
     const [inputValue, setInputValue] = useState("");
     const theme = useTheme();
     const colorMode = React.useContext(ColorModeContext);
