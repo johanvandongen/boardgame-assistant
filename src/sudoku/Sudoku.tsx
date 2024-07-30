@@ -5,6 +5,9 @@ import {
     AccordionSummary,
     Button,
     Checkbox,
+    Dialog,
+    DialogActions,
+    DialogTitle,
     FormControlLabel,
     FormGroup,
     IconButton,
@@ -51,6 +54,15 @@ export function Sudoku() {
         options: solvers,
     });
     // const notes = SudokuSolver.calculateNotes(sud.grid);
+    const [open, setOpen] = useState(false);
+
+    const handleClickOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
 
     const handleStep = () => {
         setSud((prev) => {
@@ -85,6 +97,7 @@ export function Sudoku() {
     const handleSetSudoku = (num: number) => {
         setSud((prev) => ({
             ...prev,
+            steps: [],
             grid: prev.grid.map((row, rowIdx) =>
                 rowIdx === currentCell[0]
                     ? row.map((col, colIdx) => (colIdx === currentCell[1] ? num : col))
@@ -93,13 +106,48 @@ export function Sudoku() {
         }));
     };
 
+    const clearGrid = () => {
+        setSud((prev) => ({
+            ...prev,
+            steps: [],
+            grid: SudokuSolver.getEmptyGrid(),
+        }));
+    };
+
     return (
         <CenterSplitView
             left={
                 <VisContainer>
                     <InputContainer>
-                        {/* <Button sx={{ minWidth: 0 }}>C</Button> */}
-                        <Button sx={{ minWidth: 0 }} onClick={() => handleSetSudoku(0)}>
+                        <Dialog
+                            open={open}
+                            onClose={handleClose}
+                            aria-labelledby="alert-dialog-title"
+                            aria-describedby="alert-dialog-description"
+                        >
+                            <DialogTitle id="alert-dialog-title">
+                                {"Do you want to clear all cells?"}
+                            </DialogTitle>
+                            <DialogActions>
+                                <Button onClick={handleClose}>Cancel</Button>
+                                <Button
+                                    onClick={() => {
+                                        handleClose();
+                                        clearGrid();
+                                    }}
+                                    autoFocus
+                                >
+                                    Clear
+                                </Button>
+                            </DialogActions>
+                        </Dialog>
+                        <Button sx={{ minWidth: 0, fontSize: "1rem" }} onClick={handleClickOpen}>
+                            C
+                        </Button>
+                        <Button
+                            sx={{ minWidth: 0, fontSize: "1rem" }}
+                            onClick={() => handleSetSudoku(0)}
+                        >
                             &#9003;
                         </Button>
                         {[...Array(9).keys()].map((num) => (
