@@ -1,17 +1,25 @@
 import { SudokuGrid } from "./SudokuGrid";
 import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
     Button,
     Checkbox,
+    Dialog,
+    DialogActions,
+    DialogTitle,
     FormControlLabel,
     FormGroup,
     IconButton,
     styled,
     Switch,
+    Typography,
     useTheme,
 } from "@mui/material";
 import { Step, SudokuSolver } from "./SudokuSolver";
 import { useState } from "react";
-import { ArrowBack, ArrowForward } from "@mui/icons-material";
+import { ArrowBack, ArrowDownward, ArrowForward } from "@mui/icons-material";
+import { CenterSplitView } from "../reusable/CenterSplitView";
 
 export interface Solver {
     enabled: boolean;
@@ -46,6 +54,15 @@ export function Sudoku() {
         options: solvers,
     });
     // const notes = SudokuSolver.calculateNotes(sud.grid);
+    const [open, setOpen] = useState(false);
+
+    const handleClickOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
 
     const handleStep = () => {
         setSud((prev) => {
@@ -80,6 +97,7 @@ export function Sudoku() {
     const handleSetSudoku = (num: number) => {
         setSud((prev) => ({
             ...prev,
+            steps: [],
             grid: prev.grid.map((row, rowIdx) =>
                 rowIdx === currentCell[0]
                     ? row.map((col, colIdx) => (colIdx === currentCell[1] ? num : col))
@@ -88,111 +106,172 @@ export function Sudoku() {
         }));
     };
 
+    const clearGrid = () => {
+        setSud((prev) => ({
+            ...prev,
+            steps: [],
+            grid: SudokuSolver.getEmptyGrid(),
+        }));
+    };
+
     return (
-        <Container>
-            <div>
-                <InputContainer>
-                    {/* <Button sx={{ minWidth: 0 }}>C</Button> */}
-                    <Button sx={{ minWidth: 0 }} onClick={() => handleSetSudoku(0)}>
-                        &#9003;
-                    </Button>
-                    {[...Array(9).keys()].map((num) => (
-                        <Button
-                            key={"numberinput" + num}
-                            sx={{ minWidth: 0 }}
-                            onClick={() => handleSetSudoku(num + 1)}
+        <CenterSplitView
+            left={
+                <VisContainer>
+                    <InputContainer>
+                        <Dialog
+                            open={open}
+                            onClose={handleClose}
+                            aria-labelledby="alert-dialog-title"
+                            aria-describedby="alert-dialog-description"
                         >
-                            {num + 1}
+                            <DialogTitle id="alert-dialog-title">
+                                {"Do you want to clear all cells?"}
+                            </DialogTitle>
+                            <DialogActions>
+                                <Button onClick={handleClose}>Cancel</Button>
+                                <Button
+                                    onClick={() => {
+                                        handleClose();
+                                        clearGrid();
+                                    }}
+                                    autoFocus
+                                >
+                                    Clear
+                                </Button>
+                            </DialogActions>
+                        </Dialog>
+                        <Button sx={{ minWidth: 0, fontSize: "1rem" }} onClick={handleClickOpen}>
+                            C
                         </Button>
-                    ))}
-                </InputContainer>
-                <BoardGeneratorContainer>
-                    <SudokuGrid
-                        sudoku={sud.grid}
-                        showNotes={showNotes}
-                        steps={sud.steps}
-                        currentCell={currentCell}
-                        setCurrentCell={setCurrentCell}
-                    />
-                </BoardGeneratorContainer>
-                <ButtonContainer>
-                    <IconButton sx={{ color: theme.palette.primary.main }} onClick={handlePrev}>
-                        <ArrowBack />
-                    </IconButton>
-                    <IconButton sx={{ color: theme.palette.primary.main }} onClick={handleStep}>
-                        <ArrowForward />
-                    </IconButton>
-                </ButtonContainer>
-            </div>
-            <div>
-                <p>Solvers applied</p>
-                <FormGroup>
-                    {sud.options.map((solver) => (
-                        <FormControlLabel
-                            key={solver.label}
-                            control={
-                                <Checkbox
-                                    sx={{ paddingTop: 0, paddingBottom: 0 }}
-                                    checked={solver.enabled}
-                                    onChange={() => handleSolvers(solver.label)}
+                        <Button
+                            sx={{ minWidth: 0, fontSize: "1rem" }}
+                            onClick={() => handleSetSudoku(0)}
+                        >
+                            &#9003;
+                        </Button>
+                        {[...Array(9).keys()].map((num) => (
+                            <Button
+                                key={"numberinput" + num}
+                                sx={{ minWidth: 0, fontSize: "1rem" }}
+                                onClick={() => handleSetSudoku(num + 1)}
+                            >
+                                {num + 1}
+                            </Button>
+                        ))}
+                    </InputContainer>
+                    <BoardGeneratorContainer>
+                        <SudokuGrid
+                            sudoku={sud.grid}
+                            showNotes={showNotes}
+                            steps={sud.steps}
+                            currentCell={currentCell}
+                            setCurrentCell={setCurrentCell}
+                        />
+                    </BoardGeneratorContainer>
+                    <ButtonContainer>
+                        <IconButton sx={{ color: theme.palette.primary.main }} onClick={handlePrev}>
+                            <ArrowBack />
+                        </IconButton>
+                        <IconButton sx={{ color: theme.palette.primary.main }} onClick={handleStep}>
+                            <ArrowForward />
+                        </IconButton>
+                    </ButtonContainer>
+                </VisContainer>
+            }
+            right={
+                <OptionsContainer>
+                    <h3>Options</h3>
+                    <div>
+                        <p>Steps taken: {sud.steps.length}</p>
+                        <p>Last step:</p>
+                        {sud.steps.length > 0 ? (
+                            <p>
+                                <i>
+                                    {sud.steps.slice(-1)[0].value} using{" "}
+                                    {sud.steps.slice(-1)[0].method} method
+                                </i>
+                            </p>
+                        ) : (
+                            <p>
+                                <i>No steps taken</i>
+                            </p>
+                        )}
+                        {/* <p>check notes version</p> */}
+                    </div>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={showNotes}
+                                onChange={() => setShowNotes((prev) => !prev)}
+                            />
+                        }
+                        label={"show notes"}
+                    ></FormControlLabel>
+                    <Accordion>
+                        <AccordionSummary
+                            expandIcon={<ArrowDownward />}
+                            aria-controls="panel1-content"
+                            id="panel1-header"
+                        >
+                            <Typography>Solvers applied</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <FormGroup>
+                                {sud.options.map((solver) => (
+                                    <FormControlLabel
+                                        key={solver.label}
+                                        control={
+                                            <Checkbox
+                                                sx={{ paddingTop: 0, paddingBottom: 0 }}
+                                                checked={solver.enabled}
+                                                onChange={() => handleSolvers(solver.label)}
+                                            />
+                                        }
+                                        label={solver.label}
+                                    />
+                                ))}
+                                <FormControlLabel
+                                    key={"Last remaining"}
+                                    control={
+                                        <Checkbox
+                                            sx={{ paddingTop: 0, paddingBottom: 0 }}
+                                            disabled
+                                        />
+                                    }
+                                    label={"Last remaining"}
                                 />
-                            }
-                            label={solver.label}
-                        />
-                    ))}
-                    <FormControlLabel
-                        key={"Last remaining"}
-                        control={<Checkbox sx={{ paddingTop: 0, paddingBottom: 0 }} disabled />}
-                        label={"Last remaining"}
-                    />
-                    <FormControlLabel
-                        key={"naked pair"}
-                        control={<Checkbox sx={{ paddingTop: 0, paddingBottom: 0 }} disabled />}
-                        label={"naked pair"}
-                    />
-                </FormGroup>
-                <FormControlLabel
-                    control={
-                        <Switch
-                            checked={showNotes}
-                            onChange={() => setShowNotes((prev) => !prev)}
-                        />
-                    }
-                    label={"show notes"}
-                ></FormControlLabel>
-                <div>
-                    <p>Solution info</p>
-                    <p>Solve size: {sud.steps.length}</p>
-                    <p>Last step</p>
-                    {sud.steps.length > 0 && (
-                        <p>
-                            {sud.steps.slice(-1)[0].value} using {sud.steps.slice(-1)[0].method}{" "}
-                            method
-                        </p>
-                    )}
-                </div>
-                {/* <p>check notes version</p> */}
-            </div>
-        </Container>
+                                <FormControlLabel
+                                    key={"naked pair"}
+                                    control={
+                                        <Checkbox
+                                            sx={{ paddingTop: 0, paddingBottom: 0 }}
+                                            disabled
+                                        />
+                                    }
+                                    label={"naked pair"}
+                                />
+                            </FormGroup>
+                        </AccordionDetails>
+                    </Accordion>
+                    {/* <p>Solvers applied</p> */}
+                </OptionsContainer>
+            }
+        />
     );
 }
 
+const OptionsContainer = styled("div")(({ theme }) => ({
+    width: "100%",
+    [theme.breakpoints.up("sm")]: {
+        width: "50%",
+    },
+}));
 const InputContainer = styled("div")(() => ({
     width: "100%",
     display: "flex",
-}));
-
-const Container = styled("div")(({ theme }) => ({
-    display: "flex",
-    flexDirection: "column",
-    width: "80%",
-    [theme.breakpoints.up("sm")]: {
-        flexDirection: "row",
-        height: "70dvh",
-    },
     justifyContent: "space-between",
-    gap: "1rem",
-    marginTop: "1rem",
+    fontSize: "1rem",
 }));
 
 const ButtonContainer = styled("div")(() => ({
@@ -201,12 +280,13 @@ const ButtonContainer = styled("div")(() => ({
     gap: "1rem",
 }));
 
+const VisContainer = styled("div")(({ theme }) => ({
+    width: "100%",
+    [theme.breakpoints.up("sm")]: {
+        width: "70dvh",
+    },
+}));
+
 const BoardGeneratorContainer = styled("div")(() => ({
-    height: "100%",
-    // width: "100%",
-    aspectRatio: "1 / 1",
-    display: "flex",
-    gap: "1rem",
-    flexDirection: "column",
-    alignItems: "center",
+    width: "100%",
 }));

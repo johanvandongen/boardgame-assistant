@@ -25,6 +25,14 @@ export abstract class SudokuSolver {
         [6, 6],
     ];
 
+    public static getEmptyGrid(): number[][] {
+        const grid: number[][] = [];
+        for (let r = 0; r < 9; r++) {
+            grid.push(new Array(9).fill(0));
+        }
+        return grid;
+    }
+
     static calculateNotes(grid: number[][]) {
         // const notes: (number[] | null)[][] = [];
         const notes: Notes = [];
@@ -50,7 +58,7 @@ export abstract class SudokuSolver {
     }
 
     private static getNextEmptyCell(notes: Notes): [number, number] | null {
-        let minOptions: number = 9;
+        let minOptions: number = 10;
         let nextCell: null | [number, number] = null;
         for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 9; c++) {
