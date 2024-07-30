@@ -249,24 +249,23 @@ export abstract class SudokuSolver {
         const lastStep = copySteps.slice(-1)[0];
         if (!SudokuChecker.isSolvable(notes) && lastStep !== undefined) {
             console.log("not a valid grid, backtrack");
-            if (
-                lastStep.method === "backtrack" &&
-                lastStep.backtrackIdx < lastStep.backtrackValues.length - 1
-            ) {
-                const newstep: Step = {
-                    ...lastStep,
-                    value: lastStep.backtrackValues[lastStep.backtrackIdx + 1],
-                    backtrackIdx: lastStep.backtrackIdx + 1,
-                };
-                copyGrid[newstep.row][newstep.col] = newstep.value;
-                return [newstep, copyGrid];
-            } else {
-                const newstep: Step = {
-                    ...lastStep,
-                    value: 0,
-                };
+            let idx = 1;
+            while (copySteps.length - idx >= 0) {
+                const lastStep = copySteps[copySteps.length - idx];
+                if (
+                    lastStep.method === "backtrack" &&
+                    lastStep.backtrackIdx < lastStep.backtrackValues.length - 1
+                ) {
+                    const newstep: Step = {
+                        ...lastStep,
+                        value: lastStep.backtrackValues[lastStep.backtrackIdx + 1],
+                        backtrackIdx: lastStep.backtrackIdx + 1,
+                    };
+                    copyGrid[newstep.row][newstep.col] = newstep.value;
+                    return [newstep, copyGrid];
+                }
                 copyGrid[lastStep.row][lastStep.col] = 0;
-                return [newstep, copyGrid];
+                idx += 1;
             }
         }
 
