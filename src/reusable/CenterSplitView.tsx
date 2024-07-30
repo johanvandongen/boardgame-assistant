@@ -1,5 +1,4 @@
 import { styled } from "@mui/material";
-import * as React from "react";
 
 export interface ICenterSplitViewProps {
     left: JSX.Element;
