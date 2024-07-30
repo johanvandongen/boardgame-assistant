@@ -91,6 +91,9 @@ const SliderContainer = styled("div")(() => ({
     alignItems: "center",
 }));
 
-const VisualisationContainer = styled("div")(() => ({
+const VisualisationContainer = styled("div")(({ theme }) => ({
     width: "90%",
+    [theme.breakpoints.up("sm")]: {
+        width: "100dvh",
+    },
 }));

@@ -19,6 +19,8 @@ const LeftContainer = styled("div")(() => ({
     // width: "50%",
     display: "flex",
     justifyContent: "flex-end",
+    // justifyContent: "center",
+    alignItems: "center",
 }));
 const RightContainer = styled("div")(() => ({
     // width: "100%",
