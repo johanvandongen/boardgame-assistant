@@ -25,6 +25,41 @@ export function SudokuGrid({
     const gridSize = cells * cellSize;
     const outerStrokeWidth = 2;
     const innerStrokeWidth = 1;
+
+    const getBacktrackNotes = (steps: Step[]): JSX.Element[] => {
+        let idx = 1;
+        const result = [];
+        for (const step of steps) {
+            if (step.method === "backtrack" && step.backtrackValues.length > 1) {
+                const sx = outerStrokeWidth / 2 + step.col * cellSize;
+                const sy = outerStrokeWidth / 2 + step.row * cellSize;
+                const size = cellSize / 2;
+                const margin = 1;
+                result.push(
+                    <React.Fragment key={"backtrackhint" + idx}>
+                        <polygon
+                            // points={"100,10 150,190 50,190"}
+                            fill={theme.palette.warning.light}
+                            points={`${sx}, ${sy} ${sx + size}, ${sy} ${sx}, ${sy + size}`}
+                        />
+                        <text
+                            x={sx + size / 4 + margin}
+                            y={sy + size / 4 + margin}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            fontSize={size / 2}
+                            fill={theme.palette.mode === "light" ? "black" : "white"}
+                        >
+                            {idx}
+                        </text>
+                    </React.Fragment>
+                );
+                idx += 1;
+            }
+        }
+        return result;
+    };
+
     return (
         <svg
             className="sudoku-grid"
@@ -39,15 +74,8 @@ export function SudokuGrid({
             }}
             viewBox={`0 0 ${gridSize + outerStrokeWidth} ${gridSize + outerStrokeWidth}`}
         >
-            {lastStep !== undefined && (
-                <rect
-                    x={outerStrokeWidth / 2 + lastStep.col * cellSize}
-                    y={outerStrokeWidth / 2 + lastStep.row * cellSize}
-                    width={cellSize}
-                    height={cellSize}
-                    fill={theme.palette.success.light}
-                ></rect>
-            )}
+            {getBacktrackNotes(steps)}
+
             {currentCell[0] !== -1 && (
                 <rect
                     x={outerStrokeWidth / 2 + currentCell[1] * cellSize}
@@ -56,6 +84,34 @@ export function SudokuGrid({
                     height={cellSize}
                     fill={theme.palette.primary.light}
                 ></rect>
+            )}
+
+            {lastStep !== undefined && lastStep.value > 0 && (
+                <>
+                    <rect
+                        x={outerStrokeWidth / 2 + lastStep.col * cellSize}
+                        y={outerStrokeWidth / 2 + lastStep.row * cellSize}
+                        width={cellSize}
+                        height={cellSize}
+                        fill={
+                            lastStep.method === "manual"
+                                ? theme.palette.primary.light
+                                : theme.palette.success.light
+                        }
+                    ></rect>
+                    {lastStep.value > 0 && (
+                        <text
+                            x={outerStrokeWidth / 2 + cellSize * lastStep.col + cellSize / 2}
+                            y={outerStrokeWidth + cellSize * lastStep.row + cellSize / 2}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            fontWeight={600}
+                            fill={theme.palette.mode === "light" ? "black" : "white"}
+                        >
+                            {lastStep.value}
+                        </text>
+                    )}
+                </>
             )}
             {sudoku.map((row, r) =>
                 row.map((val, c) => (

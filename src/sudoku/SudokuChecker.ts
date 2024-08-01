@@ -51,7 +51,7 @@ export class SudokuChecker {
     }
 
     public static isSolved(grid: number[][]): boolean {
-        return !grid.flat().includes(0);
+        return !grid.flat().includes(0) && SudokuChecker.isValid(grid);
     }
 
     public static isValid(grid: number[][]): boolean {
@@ -59,6 +59,10 @@ export class SudokuChecker {
         for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 9; c++) {
                 const temp = copyGrid[r][c];
+                if (temp === 0) {
+                    continue;
+                }
+
                 copyGrid[r][c] = 0;
                 if (SudokuChecker.conflict(copyGrid, r, c, temp)) {
                     return false;
