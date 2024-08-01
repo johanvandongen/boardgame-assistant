@@ -25,6 +25,41 @@ export function SudokuGrid({
     const gridSize = cells * cellSize;
     const outerStrokeWidth = 2;
     const innerStrokeWidth = 1;
+
+    const getBacktrackNotes = (steps: Step[]): JSX.Element[] => {
+        let idx = 1;
+        const result = [];
+        for (const step of steps) {
+            if (step.method === "backtrack" && step.backtrackValues.length > 1) {
+                const sx = outerStrokeWidth / 2 + step.col * cellSize;
+                const sy = outerStrokeWidth / 2 + step.row * cellSize;
+                const size = cellSize / 2;
+                const margin = 1;
+                result.push(
+                    <React.Fragment key={"backtrackhint" + idx}>
+                        <polygon
+                            // points={"100,10 150,190 50,190"}
+                            fill={theme.palette.warning.light}
+                            points={`${sx}, ${sy} ${sx + size}, ${sy} ${sx}, ${sy + size}`}
+                        />
+                        <text
+                            x={sx + size / 4 + margin}
+                            y={sy + size / 4 + margin}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            fontSize={size / 2}
+                            fill={theme.palette.mode === "light" ? "black" : "white"}
+                        >
+                            {idx}
+                        </text>
+                    </React.Fragment>
+                );
+                idx += 1;
+            }
+        }
+        return result;
+    };
+
     return (
         <svg
             className="sudoku-grid"
@@ -39,6 +74,8 @@ export function SudokuGrid({
             }}
             viewBox={`0 0 ${gridSize + outerStrokeWidth} ${gridSize + outerStrokeWidth}`}
         >
+            {getBacktrackNotes(steps)}
+
             {lastStep !== undefined && (
                 <rect
                     x={outerStrokeWidth / 2 + lastStep.col * cellSize}
