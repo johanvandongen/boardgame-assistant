@@ -42,7 +42,7 @@ const solvers: Solver[] = [
     { enabled: true, label: "row check" },
     { enabled: true, label: "col check" },
     { enabled: true, label: "box check" },
-    { enabled: true, label: "backtrack" },
+    { enabled: false, label: "backtrack" },
 ];
 
 const grid = [
@@ -89,13 +89,6 @@ export function Sudoku() {
         });
     };
 
-    const handleReset = () => {
-        setSud((prev) => {
-            const [steps, grid] = SudokuSolver.reset(prev.grid, prev.steps);
-            return { ...prev, steps: steps, grid: grid };
-        });
-    };
-
     const handleStep = () => {
         setSud((prev) => {
             const [step, grid] = SudokuSolver.step(prev.grid, prev.steps, prev.options);
@@ -120,6 +113,12 @@ export function Sudoku() {
         const step = SudokuSolver.step(grid, steps, options)[0];
         if (!SudokuChecker.isValid(sud.grid)) {
             addMessage("Sudoku is in incorrect state", "error");
+        } else if (
+            !SudokuSolver.isSolveable(sud.grid, sud.steps) &&
+            sud.forwardCheck &&
+            step === false
+        ) {
+            addMessage("Cannot solve further due to unsolvable state", "warning");
         } else if (!SudokuSolver.isSolveable(sud.grid, sud.steps)) {
             addMessage("Sudoku is in unsolvable state", "error");
         } else if (sud.forwardCheck && step === false) {
@@ -129,6 +128,30 @@ export function Sudoku() {
         } else {
             snackClose();
         }
+    };
+
+    const handleReset = () => {
+        // needs refactor, because if statements are simlar to handlePrev
+        setSud((prev) => {
+            if (prev.steps.length <= 0) {
+                return {
+                    ...prev,
+                    forwardCheck: false,
+                };
+            }
+            if (prev.steps[prev.steps.length - 1].method === "manual") {
+                const grid = SudokuSolver.prev(prev.grid, prev.steps);
+                return {
+                    ...prev,
+                    grid: grid,
+                    steps: prev.steps.slice(0, -1),
+                    forwardCheck: false,
+                };
+            }
+            const [steps, grid] = SudokuSolver.reset(prev.grid, prev.steps);
+            return { ...prev, steps: steps, grid: grid };
+        });
+        setCurrentCell([-1, -1]);
     };
 
     function handlePrev() {

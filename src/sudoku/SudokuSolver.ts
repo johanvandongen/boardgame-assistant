@@ -202,7 +202,7 @@ export abstract class SudokuSolver {
     }
 
     private static bruteforceChoice(notes: Notes): Step | null {
-        console.log("backtracking!", SudokuSolver.getNextEmptyCell(notes));
+        // console.log("backtracking!", SudokuSolver.getNextEmptyCell(notes));
         const emptyCell = SudokuSolver.getNextEmptyCell(notes);
         const r = emptyCell ? emptyCell[0] : -1;
         const c = emptyCell ? emptyCell[1] : -1;
@@ -237,17 +237,20 @@ export abstract class SudokuSolver {
 
     public static reset(grid: number[][], steps: Step[]): [Step[], number[][]] {
         let copyGrid = grid.map((r) => r.slice());
-        let copySteps: Step[] = steps.map((step) => ({
+        const copySteps: Step[] = steps.map((step) => ({
             ...step,
             backtrackValues: [...step.backtrackValues],
         }));
-        for (const step of steps) {
-            if (step.method === "manual") {
-                return [copySteps, copyGrid];
-            }
+        while (copySteps.length) {
             const grid = SudokuSolver.prev(copyGrid, copySteps);
+            const step = copySteps.pop();
+            if (step === undefined) {
+                return [copySteps, copyGrid];
+            } else if (step.method === "manual") {
+                copyGrid[step.row][step.col] = step.value;
+                return [[...copySteps, step], copyGrid];
+            }
             copyGrid = grid;
-            copySteps = copySteps.slice(0, -1);
         }
         return [copySteps, copyGrid];
     }
