@@ -2,8 +2,10 @@ import { Solver } from "./Sudoku";
 import { SudokuChecker } from "./SudokuChecker";
 
 export type Notes = (null | number[])[][]; // 2d grid with: null if cell is occupied, list of possible options otherwise
+export type SudokuState = "solved" | "unsolved" | "unsolvable" | "invalid" | "unknown";
 
 export interface Step {
+    state: SudokuState;
     row: number;
     col: number;
     value: number;
@@ -86,6 +88,7 @@ export abstract class SudokuSolver {
                     method: "box",
                     backtrackValues: [],
                     backtrackIdx: 0,
+                    state: "unsolved",
                 };
                 for (let r = box[0]; r < box[0] + 3; r++) {
                     for (let c = box[1]; c < box[1] + 3; c++) {
@@ -116,6 +119,7 @@ export abstract class SudokuSolver {
                 method: "row",
                 backtrackValues: [],
                 backtrackIdx: 0,
+                state: "unsolved",
             };
             for (let option = 1; option <= 9; option++) {
                 for (let c = 0; c < 9; c++) {
@@ -145,6 +149,7 @@ export abstract class SudokuSolver {
                 method: "col",
                 backtrackValues: [],
                 backtrackIdx: 0,
+                state: "unsolved",
             };
             for (let option = 1; option <= 9; option++) {
                 for (let r = 0; r < 9; r++) {
@@ -210,10 +215,24 @@ export abstract class SudokuSolver {
                 method: "backtrack",
                 backtrackValues: cellNotes,
                 backtrackIdx: 0,
+                state: "unsolved",
             };
             return step;
         }
         return null;
+    }
+
+    public static addManualStep(row: number, col: number, value: number): Step {
+        const step: Step = {
+            state: "unknown",
+            row: row,
+            col: col,
+            value: value,
+            method: "",
+            backtrackValues: [],
+            backtrackIdx: 0,
+        };
+        return step;
     }
 
     public static prev(grid: number[][], steps: Step[]): number[][] {
@@ -222,7 +241,19 @@ export abstract class SudokuSolver {
             return copyGrid;
         }
         const lastStep = steps.slice(-1)[0];
-        copyGrid[lastStep.row][lastStep.col] = 0;
+        const copySteps: Step[] = steps.map((step) => ({
+            ...step,
+            backtrackValues: [...step.backtrackValues],
+        }));
+        if (lastStep.method === "manual" && lastStep.value === 0) {
+            const val = copySteps
+                .slice(0, -1)
+                .reverse()
+                .find((step) => step.col === lastStep.col && step.row === lastStep.row);
+            copyGrid[lastStep.row][lastStep.col] = val === undefined ? 0 : val.value;
+        } else {
+            copyGrid[lastStep.row][lastStep.col] = 0;
+        }
         return copyGrid;
     }
 

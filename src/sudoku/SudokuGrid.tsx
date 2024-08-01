@@ -76,15 +76,6 @@ export function SudokuGrid({
         >
             {getBacktrackNotes(steps)}
 
-            {lastStep !== undefined && (
-                <rect
-                    x={outerStrokeWidth / 2 + lastStep.col * cellSize}
-                    y={outerStrokeWidth / 2 + lastStep.row * cellSize}
-                    width={cellSize}
-                    height={cellSize}
-                    fill={theme.palette.success.light}
-                ></rect>
-            )}
             {currentCell[0] !== -1 && (
                 <rect
                     x={outerStrokeWidth / 2 + currentCell[1] * cellSize}
@@ -93,6 +84,34 @@ export function SudokuGrid({
                     height={cellSize}
                     fill={theme.palette.primary.light}
                 ></rect>
+            )}
+
+            {lastStep !== undefined && lastStep.value > 0 && (
+                <>
+                    <rect
+                        x={outerStrokeWidth / 2 + lastStep.col * cellSize}
+                        y={outerStrokeWidth / 2 + lastStep.row * cellSize}
+                        width={cellSize}
+                        height={cellSize}
+                        fill={
+                            lastStep.method === "manual"
+                                ? theme.palette.primary.light
+                                : theme.palette.success.light
+                        }
+                    ></rect>
+                    {lastStep.value > 0 && (
+                        <text
+                            x={outerStrokeWidth / 2 + cellSize * lastStep.col + cellSize / 2}
+                            y={outerStrokeWidth + cellSize * lastStep.row + cellSize / 2}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            fontWeight={600}
+                            fill={theme.palette.mode === "light" ? "black" : "white"}
+                        >
+                            {lastStep.value}
+                        </text>
+                    )}
+                </>
             )}
             {sudoku.map((row, r) =>
                 row.map((val, c) => (

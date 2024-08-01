@@ -3,6 +3,7 @@ import {
     Accordion,
     AccordionDetails,
     AccordionSummary,
+    Alert,
     Button,
     Checkbox,
     Dialog,
@@ -11,15 +12,21 @@ import {
     FormControlLabel,
     FormGroup,
     IconButton,
+    Snackbar,
     styled,
     Switch,
     Typography,
     useTheme,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { Step, SudokuSolver } from "./SudokuSolver";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowBack, ArrowDownward, ArrowForward } from "@mui/icons-material";
 import { CenterSplitView } from "../reusable/CenterSplitView";
+import useSnackbar from "./useSnackbar";
+import React from "react";
+import { SudokuChecker } from "./SudokuChecker";
+// import { SudokuChecker } from "./SudokuChecker";
 
 export interface Solver {
     enabled: boolean;
@@ -48,12 +55,18 @@ export function Sudoku() {
     const theme = useTheme();
     const [showNotes, setShowNotes] = useState(false);
     const [currentCell, setCurrentCell] = useState<[number, number]>([-1, -1]);
-    const [sud, setSud] = useState<{ grid: number[][]; steps: Step[]; options: Solver[] }>({
+    const [sud, setSud] = useState<{
+        grid: number[][];
+        steps: Step[];
+        options: Solver[];
+        forwardCheck: boolean;
+    }>({
         grid: grid,
         steps: [],
         options: solvers,
+        forwardCheck: false,
     });
-    // const notes = SudokuSolver.calculateNotes(sud.grid);
+    const { messageInfo, open: snackOpen, addMessage, snackExited, snackClose } = useSnackbar();
     const [open, setOpen] = useState(false);
 
     const handleClickOpen = () => {
@@ -68,22 +81,53 @@ export function Sudoku() {
         setSud((prev) => {
             const [step, grid] = SudokuSolver.step(prev.grid, prev.steps, prev.options);
             if (!(typeof step === "boolean")) {
-                return { grid: grid, steps: [...prev.steps, step], options: prev.options };
+                return {
+                    ...prev,
+                    grid: grid,
+                    steps: [...prev.steps, step],
+                    options: prev.options,
+                    forwardCheck: true,
+                };
             }
-            return prev;
+            return {
+                ...prev,
+                forwardCheck: true,
+            };
         });
         setCurrentCell([-1, -1]);
     };
 
-    const handlePrev = () => {
+    const setSnackbarMessage = (grid: number[][], steps: Step[], options: Solver[]) => {
+        const step = SudokuSolver.step(grid, steps, options)[0];
+        if (!SudokuChecker.isValid(sud.grid)) {
+            addMessage("Sudoku is in incorrect state", "error");
+        } else if (sud.forwardCheck && step === false) {
+            addMessage("Cannot solve further with applied solvers", "warning");
+        } else if (step === true) {
+            addMessage("Solved!", "success");
+        } else {
+            snackClose();
+        }
+    };
+
+    function handlePrev() {
         setSud((prev) => {
             if (prev.steps.length <= 0) {
-                return prev;
+                return {
+                    ...prev,
+                    forwardCheck: false,
+                };
             }
             const grid = SudokuSolver.prev(prev.grid, prev.steps);
-            return { ...prev, grid: grid, steps: prev.steps.slice(0, -1) };
+            return {
+                ...prev,
+                grid: grid,
+                steps: prev.steps.slice(0, -1),
+                forwardCheck: false,
+            };
         });
-    };
+        setCurrentCell([-1, -1]);
+    }
 
     const handleSolvers = (label: string) => {
         setSud((prev) => ({
@@ -95,15 +139,32 @@ export function Sudoku() {
     };
 
     const handleSetSudoku = (num: number) => {
-        setSud((prev) => ({
-            ...prev,
-            steps: [],
-            grid: prev.grid.map((row, rowIdx) =>
+        setSud((prev) => {
+            if (currentCell[0] === -1 || currentCell[1] === -1) {
+                return prev;
+            }
+
+            const newGrid = prev.grid.map((row, rowIdx) =>
                 rowIdx === currentCell[0]
                     ? row.map((col, colIdx) => (colIdx === currentCell[1] ? num : col))
                     : row
-            ),
-        }));
+            );
+            const newStep: Step = {
+                state: "unknown",
+                row: currentCell[0],
+                col: currentCell[1],
+                value: num,
+                method: "manual",
+                backtrackValues: [],
+                backtrackIdx: 0,
+            };
+            return {
+                ...prev,
+                steps: [...prev.steps, newStep],
+                grid: newGrid,
+                forwardCheck: false,
+            };
+        });
     };
 
     const clearGrid = () => {
@@ -114,10 +175,55 @@ export function Sudoku() {
         }));
     };
 
+    useEffect(() => {
+        setSnackbarMessage(sud.grid, sud.steps, sud.options);
+    }, [sud]);
+
     return (
         <CenterSplitView
             left={
                 <VisContainer>
+                    {/* <Button onClick={addMessage("Solved!", "success")}>Show message A</Button>
+                    <Button
+                        onClick={addMessage("Cannot solve further with applied solvers", "warning")}
+                        >
+                        Show message B
+                    </Button>
+                    <Button onClick={addMessage("Sudoku is in incorrect state", "error")}>
+                        Show message C
+                    </Button>
+                    <Button onClick={addMessage("Sudoku is unsolvable", "warning")}>
+                        Show message D
+                    </Button> */}
+                    <Snackbar
+                        key={messageInfo ? messageInfo.key : undefined}
+                        open={snackOpen}
+                        autoHideDuration={6000}
+                        onClose={handleClose}
+                        TransitionProps={{ onExited: snackExited }}
+                        message={messageInfo ? messageInfo.message : undefined}
+                        action={
+                            <React.Fragment>
+                                <IconButton
+                                    aria-label="close"
+                                    color="inherit"
+                                    sx={{ p: 0.5 }}
+                                    onClick={() => snackClose()}
+                                >
+                                    <CloseIcon />
+                                </IconButton>
+                            </React.Fragment>
+                        }
+                    >
+                        <Alert
+                            onClose={() => snackClose()}
+                            severity={messageInfo ? messageInfo.severity : "info"}
+                            variant="filled"
+                            sx={{ width: "100%" }}
+                        >
+                            {messageInfo ? messageInfo.message : undefined}
+                        </Alert>
+                    </Snackbar>
                     <InputContainer>
                         <Dialog
                             open={open}
