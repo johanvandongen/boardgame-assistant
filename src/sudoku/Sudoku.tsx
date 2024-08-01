@@ -89,6 +89,13 @@ export function Sudoku() {
         });
     };
 
+    const handleReset = () => {
+        setSud((prev) => {
+            const [steps, grid] = SudokuSolver.reset(prev.grid, prev.steps);
+            return { ...prev, steps: steps, grid: grid };
+        });
+    };
+
     const handleStep = () => {
         setSud((prev) => {
             const [step, grid] = SudokuSolver.step(prev.grid, prev.steps, prev.options);
@@ -278,7 +285,10 @@ export function Sudoku() {
                         />
                     </BoardGeneratorContainer>
                     <ButtonContainer>
-                        <IconButton sx={{ color: theme.palette.primary.main }} onClick={handleStep}>
+                        <IconButton
+                            sx={{ color: theme.palette.primary.main }}
+                            onClick={handleReset}
+                        >
                             <KeyboardDoubleArrowLeft />
                         </IconButton>
                         <IconButton sx={{ color: theme.palette.primary.main }} onClick={handlePrev}>

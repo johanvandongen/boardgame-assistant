@@ -235,6 +235,23 @@ export abstract class SudokuSolver {
         return step;
     }
 
+    public static reset(grid: number[][], steps: Step[]): [Step[], number[][]] {
+        let copyGrid = grid.map((r) => r.slice());
+        let copySteps: Step[] = steps.map((step) => ({
+            ...step,
+            backtrackValues: [...step.backtrackValues],
+        }));
+        for (const step of steps) {
+            if (step.method === "manual") {
+                return [copySteps, copyGrid];
+            }
+            const grid = SudokuSolver.prev(copyGrid, copySteps);
+            copyGrid = grid;
+            copySteps = copySteps.slice(0, -1);
+        }
+        return [copySteps, copyGrid];
+    }
+
     public static prev(grid: number[][], steps: Step[]): number[][] {
         const copyGrid = grid.map((r) => r.slice());
         if (steps.length <= 0) {
