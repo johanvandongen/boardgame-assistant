@@ -51,7 +51,7 @@ export class SudokuChecker {
     }
 
     public static isSolved(grid: number[][]): boolean {
-        return !grid.flat().includes(0);
+        return !grid.flat().includes(0) && SudokuChecker.isValid(grid);
     }
 
     public static isValid(grid: number[][]): boolean {

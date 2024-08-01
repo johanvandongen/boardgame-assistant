@@ -21,12 +21,17 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import { Step, SudokuSolver } from "./SudokuSolver";
 import { useEffect, useState } from "react";
-import { ArrowBack, ArrowDownward, ArrowForward } from "@mui/icons-material";
+import {
+    ArrowBack,
+    ArrowDownward,
+    ArrowForward,
+    KeyboardDoubleArrowLeft,
+    KeyboardDoubleArrowRight,
+} from "@mui/icons-material";
 import { CenterSplitView } from "../reusable/CenterSplitView";
 import useSnackbar from "./useSnackbar";
 import React from "react";
 import { SudokuChecker } from "./SudokuChecker";
-// import { SudokuChecker } from "./SudokuChecker";
 
 export interface Solver {
     enabled: boolean;
@@ -77,6 +82,13 @@ export function Sudoku() {
         setOpen(false);
     };
 
+    const handleSolve = () => {
+        setSud((prev) => {
+            const [steps, grid] = SudokuSolver.solve(prev.grid, prev.steps, prev.options);
+            return { ...prev, steps: [...prev.steps, ...steps], grid: grid, forwardCheck: true };
+        });
+    };
+
     const handleStep = () => {
         setSud((prev) => {
             const [step, grid] = SudokuSolver.step(prev.grid, prev.steps, prev.options);
@@ -101,8 +113,10 @@ export function Sudoku() {
         const step = SudokuSolver.step(grid, steps, options)[0];
         if (!SudokuChecker.isValid(sud.grid)) {
             addMessage("Sudoku is in incorrect state", "error");
+        } else if (!SudokuSolver.isSolveable(sud.grid, sud.steps)) {
+            addMessage("Sudoku is in unsolvable state", "error");
         } else if (sud.forwardCheck && step === false) {
-            addMessage("Cannot solve further with applied solvers", "warning");
+            addMessage("Cannot solve with applied solvers", "warning");
         } else if (step === true) {
             addMessage("Solved!", "success");
         } else {
@@ -183,18 +197,6 @@ export function Sudoku() {
         <CenterSplitView
             left={
                 <VisContainer>
-                    {/* <Button onClick={addMessage("Solved!", "success")}>Show message A</Button>
-                    <Button
-                        onClick={addMessage("Cannot solve further with applied solvers", "warning")}
-                        >
-                        Show message B
-                    </Button>
-                    <Button onClick={addMessage("Sudoku is in incorrect state", "error")}>
-                        Show message C
-                    </Button>
-                    <Button onClick={addMessage("Sudoku is unsolvable", "warning")}>
-                        Show message D
-                    </Button> */}
                     <Snackbar
                         key={messageInfo ? messageInfo.key : undefined}
                         open={snackOpen}
@@ -276,11 +278,20 @@ export function Sudoku() {
                         />
                     </BoardGeneratorContainer>
                     <ButtonContainer>
+                        <IconButton sx={{ color: theme.palette.primary.main }} onClick={handleStep}>
+                            <KeyboardDoubleArrowLeft />
+                        </IconButton>
                         <IconButton sx={{ color: theme.palette.primary.main }} onClick={handlePrev}>
                             <ArrowBack />
                         </IconButton>
                         <IconButton sx={{ color: theme.palette.primary.main }} onClick={handleStep}>
                             <ArrowForward />
+                        </IconButton>
+                        <IconButton
+                            sx={{ color: theme.palette.primary.main }}
+                            onClick={handleSolve}
+                        >
+                            <KeyboardDoubleArrowRight />
                         </IconButton>
                     </ButtonContainer>
                 </VisContainer>

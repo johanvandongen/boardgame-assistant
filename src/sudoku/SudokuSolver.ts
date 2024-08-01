@@ -257,6 +257,58 @@ export abstract class SudokuSolver {
         return copyGrid;
     }
 
+    public static isSolveable(grid: number[][], steps: Step[]): boolean {
+        const copyGrid = grid.map((r) => r.slice());
+        const copySteps: Step[] = steps.map((step) => ({
+            ...step,
+            backtrackValues: [...step.backtrackValues],
+        }));
+        const newGrid = SudokuSolver.solve(copyGrid, copySteps, [
+            { enabled: true, label: "backtrack" },
+        ])[1];
+        return SudokuChecker.isSolved(newGrid);
+    }
+
+    public static solve(
+        grid: number[][],
+        steps: Step[],
+        solverOptions: Solver[]
+    ): [Step[], number[][]] {
+        const newSteps: Step[] = [];
+        let copyGrid = grid.map((r) => r.slice());
+        const copySteps: Step[] = steps.map((step) => ({
+            ...step,
+            backtrackValues: [...step.backtrackValues],
+        }));
+        let step: Step | boolean;
+        let newGrid: number[][];
+        const running = true;
+        do {
+            [step, newGrid] = SudokuSolver.step(
+                copyGrid,
+                [...copySteps, ...newSteps],
+                solverOptions
+            );
+            if (step === true || step == false) {
+                break;
+            }
+            newSteps.push(step);
+            copyGrid = newGrid;
+        } while (running);
+        return [newSteps, copyGrid];
+    }
+
+    private static exhausted(steps: Step[], step: Step): boolean {
+        for (const s of steps) {
+            if (s.col === step.col && s.row === step.row) {
+                if (s.backtrackIdx === s.backtrackValues.length - 1) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /** Returns false if cannot be solved further, true, if solved, step otherwise. */
     public static step(
         grid: number[][],
@@ -283,9 +335,15 @@ export abstract class SudokuSolver {
             let idx = 1;
             while (copySteps.length - idx >= 0) {
                 const lastStep = copySteps[copySteps.length - idx];
+                // Dont backtrack manually filled in cells (return user feedback)
+                if (lastStep.method === "manual") {
+                    return [false, copyGrid];
+                }
+
                 if (
                     lastStep.method === "backtrack" &&
-                    lastStep.backtrackIdx < lastStep.backtrackValues.length - 1
+                    lastStep.backtrackIdx < lastStep.backtrackValues.length - 1 &&
+                    !SudokuSolver.exhausted(copySteps, lastStep)
                 ) {
                     const newstep: Step = {
                         ...lastStep,
