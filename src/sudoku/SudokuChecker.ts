@@ -1,4 +1,4 @@
-import { Notes } from "./SudokuSolver";
+import { Notes } from "./model";
 
 export class SudokuChecker {
     private static rowConflict(grid: number[][], r: number, value: number): boolean {

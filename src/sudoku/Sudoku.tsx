@@ -19,7 +19,7 @@ import {
     useTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { Step, SudokuSolver } from "./SudokuSolver";
+import { SudokuSolver } from "./SudokuSolver";
 import { useEffect, useState } from "react";
 import {
     ArrowBack,
@@ -32,18 +32,14 @@ import { CenterSplitView } from "../reusable/CenterSplitView";
 import useSnackbar from "./useSnackbar";
 import React from "react";
 import { SudokuChecker } from "./SudokuChecker";
-
-export interface Solver {
-    enabled: boolean;
-    label: string;
-}
+import { Solver, SolverMethod, Step } from "./model";
 
 const solvers: Solver[] = [
-    { enabled: true, label: "row check" },
-    { enabled: true, label: "col check" },
-    { enabled: true, label: "box check" },
-    { enabled: true, label: "elimination" },
-    { enabled: false, label: "backtrack" },
+    { enabled: true, label: SolverMethod.ROW },
+    { enabled: true, label: SolverMethod.COL },
+    { enabled: true, label: SolverMethod.BOX },
+    { enabled: true, label: SolverMethod.ELIMINATION },
+    { enabled: false, label: SolverMethod.BACKTRACK },
 ];
 
 const grid = [
@@ -195,11 +191,10 @@ export function Sudoku() {
                     : row
             );
             const newStep: Step = {
-                state: "unknown",
                 row: currentCell[0],
                 col: currentCell[1],
                 value: num,
-                method: "manual",
+                method: SolverMethod.MANUAL,
                 backtrackValues: [],
                 backtrackIdx: 0,
             };

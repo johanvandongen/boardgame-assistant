@@ -1,18 +1,5 @@
-import { Solver } from "./Sudoku";
+import { Notes, Solver, SolverMethod, Step } from "./model";
 import { SudokuChecker } from "./SudokuChecker";
-
-export type Notes = (null | number[])[][]; // 2d grid with: null if cell is occupied, list of possible options otherwise
-export type SudokuState = "solved" | "unsolved" | "unsolvable" | "invalid" | "unknown";
-
-export interface Step {
-    state: SudokuState;
-    row: number;
-    col: number;
-    value: number;
-    method: string;
-    backtrackValues: number[];
-    backtrackIdx: number;
-}
 
 export abstract class SudokuSolver {
     private static readonly boxes: [number, number][] = [
@@ -85,10 +72,9 @@ export abstract class SudokuSolver {
                     row: 0,
                     col: 0,
                     value: 0,
-                    method: "box",
+                    method: SolverMethod.BOX,
                     backtrackValues: [],
                     backtrackIdx: 0,
-                    state: "unsolved",
                 };
                 for (let r = box[0]; r < box[0] + 3; r++) {
                     for (let c = box[1]; c < box[1] + 3; c++) {
@@ -116,10 +102,9 @@ export abstract class SudokuSolver {
                 row: 0,
                 col: 0,
                 value: 0,
-                method: "row",
+                method: SolverMethod.ROW,
                 backtrackValues: [],
                 backtrackIdx: 0,
-                state: "unsolved",
             };
             for (let option = 1; option <= 9; option++) {
                 for (let c = 0; c < 9; c++) {
@@ -146,10 +131,9 @@ export abstract class SudokuSolver {
                 row: 0,
                 col: 0,
                 value: 0,
-                method: "col",
+                method: SolverMethod.COL,
                 backtrackValues: [],
                 backtrackIdx: 0,
-                state: "unsolved",
             };
             for (let option = 1; option <= 9; option++) {
                 for (let r = 0; r < 9; r++) {
@@ -178,11 +162,10 @@ export abstract class SudokuSolver {
                 }
                 if (notes[row][col].length === 1) {
                     const step: Step = {
-                        state: "unsolved",
                         row: row,
                         col: col,
                         value: notes[row][col][0],
-                        method: "elimination",
+                        method: SolverMethod.ELIMINATION,
                         backtrackValues: [],
                         backtrackIdx: 0,
                     };
@@ -204,19 +187,19 @@ export abstract class SudokuSolver {
             }
 
             switch (solver.label) {
-                case "row check":
+                case SolverMethod.ROW:
                     result.push(SudokuSolver.rowCheck);
                     break;
-                case "col check":
+                case SolverMethod.COL:
                     result.push(SudokuSolver.colCheck);
                     break;
-                case "box check":
+                case SolverMethod.BOX:
                     result.push(SudokuSolver.boxCheck);
                     break;
-                case "elimination":
+                case SolverMethod.ELIMINATION:
                     result.push(SudokuSolver.lastPossibleNumberCheck);
                     break;
-                case "backtrack":
+                case SolverMethod.BACKTRACK:
                     result.push(SudokuSolver.bruteforceChoice);
                     break;
             }
@@ -234,28 +217,14 @@ export abstract class SudokuSolver {
                 row: r,
                 col: c,
                 value: cellNotes[0],
-                method: "backtrack",
+                method: SolverMethod.BACKTRACK,
                 backtrackValues: cellNotes,
                 backtrackIdx: 0,
-                state: "unsolved",
             };
             return step;
         }
         return null;
     }
-
-    // public static addManualStep(row: number, col: number, value: number): Step {
-    //     const step: Step = {
-    //         state: "unknown",
-    //         row: row,
-    //         col: col,
-    //         value: value,
-    //         method: "",
-    //         backtrackValues: [],
-    //         backtrackIdx: 0,
-    //     };
-    //     return step;
-    // }
 
     public static reset(grid: number[][], steps: Step[]): [Step[], number[][]] {
         let copyGrid = grid.map((r) => r.slice());
@@ -268,7 +237,7 @@ export abstract class SudokuSolver {
             const step = copySteps.pop();
             if (step === undefined) {
                 return [copySteps, copyGrid];
-            } else if (step.method === "manual") {
+            } else if (step.method === SolverMethod.MANUAL) {
                 copyGrid[step.row][step.col] = step.value;
                 return [[...copySteps, step], copyGrid];
             }
@@ -287,7 +256,7 @@ export abstract class SudokuSolver {
             ...step,
             backtrackValues: [...step.backtrackValues],
         }));
-        if (lastStep.method === "manual" && lastStep.value === 0) {
+        if (lastStep.method === SolverMethod.MANUAL && lastStep.value === 0) {
             const val = copySteps
                 .slice(0, -1)
                 .reverse()
@@ -307,7 +276,7 @@ export abstract class SudokuSolver {
             backtrackValues: [...step.backtrackValues],
         }));
         const newGrid = SudokuSolver.solve(copyGrid, copySteps, [
-            { enabled: true, label: "backtrack" },
+            { enabled: true, label: SolverMethod.BACKTRACK },
         ])[1];
         return SudokuChecker.isSolved(newGrid);
     }
@@ -381,12 +350,12 @@ export abstract class SudokuSolver {
             while (copySteps.length - idx >= 0) {
                 const lastStep = copySteps[copySteps.length - idx];
                 // Dont backtrack manually filled in cells (return user feedback)
-                if (lastStep.method === "manual") {
+                if (lastStep.method === SolverMethod.MANUAL) {
                     return [false, copyGrid];
                 }
 
                 if (
-                    lastStep.method === "backtrack" &&
+                    lastStep.method === SolverMethod.BACKTRACK &&
                     lastStep.backtrackIdx < lastStep.backtrackValues.length - 1 &&
                     !SudokuSolver.exhausted(copySteps, lastStep)
                 ) {

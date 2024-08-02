@@ -1,6 +1,7 @@
 import * as React from "react";
-import { Step, SudokuSolver } from "./SudokuSolver";
+import { SudokuSolver } from "./SudokuSolver";
 import { useTheme } from "@mui/material";
+import { Notes, SolverMethod, Step } from "./model";
 
 export interface ISudokuGridProps {
     sudoku: number[][];
@@ -18,7 +19,7 @@ export function SudokuGrid({
     setCurrentCell,
 }: ISudokuGridProps) {
     const theme = useTheme();
-    const notes = SudokuSolver.calculateNotes(sudoku);
+    const notes: Notes = SudokuSolver.calculateNotes(sudoku);
     const lastStep = steps.slice(-1)[0];
     const cells = 9;
     const cellSize = 32;
@@ -30,7 +31,7 @@ export function SudokuGrid({
         let idx = 1;
         const result = [];
         for (const step of steps) {
-            if (step.method === "backtrack" && step.backtrackValues.length > 1) {
+            if (step.method === SolverMethod.BACKTRACK && step.backtrackValues.length > 1) {
                 const sx = outerStrokeWidth / 2 + step.col * cellSize;
                 const sy = outerStrokeWidth / 2 + step.row * cellSize;
                 const size = cellSize / 2;
@@ -94,7 +95,7 @@ export function SudokuGrid({
                         width={cellSize}
                         height={cellSize}
                         fill={
-                            lastStep.method === "manual"
+                            lastStep.method === SolverMethod.MANUAL
                                 ? theme.palette.primary.light
                                 : theme.palette.success.light
                         }
