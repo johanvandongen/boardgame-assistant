@@ -6,6 +6,8 @@ import {
     Box,
     IconButton,
     InputBase,
+    Menu,
+    MenuItem,
     Toolbar,
     Typography,
 } from "@mui/material";
@@ -20,6 +22,7 @@ import Brightness7Icon from "@mui/icons-material/Brightness7";
 import React from "react";
 import { ColorModeContext } from "./ThemeContext";
 import { Sudoku } from "./sudoku/Sudoku";
+import { FeedbackPage } from "./FeedbackPage";
 
 export default function App() {
     type GameItem = {
@@ -37,6 +40,14 @@ export default function App() {
     const [inputValue, setInputValue] = useState("");
     const theme = useTheme();
     const colorMode = React.useContext(ColorModeContext);
+    const [menuAncher, setMenuAncher] = useState<null | HTMLElement>(null);
+    const open = Boolean(menuAncher);
+    const openMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setMenuAncher(event.currentTarget);
+    };
+    const closeMenu = () => {
+        setMenuAncher(null);
+    };
 
     return (
         <PageWrapper>
@@ -44,6 +55,7 @@ export default function App() {
                 <AppBar position="static">
                     <Toolbar>
                         <IconButton
+                            onClick={openMenu}
                             size="large"
                             edge="start"
                             color="inherit"
@@ -52,6 +64,32 @@ export default function App() {
                         >
                             <MenuIcon />
                         </IconButton>
+                        <Menu
+                            id="basic-menu"
+                            anchorEl={menuAncher}
+                            open={open}
+                            onClose={closeMenu}
+                            MenuListProps={{
+                                "aria-labelledby": "basic-button",
+                            }}
+                        >
+                            <MenuItem
+                                onClick={() => {
+                                    closeMenu();
+                                    setGame({ label: "empty", component: <EmptyPage /> });
+                                }}
+                            >
+                                Home
+                            </MenuItem>
+                            <MenuItem
+                                onClick={() => {
+                                    closeMenu();
+                                    setGame({ label: "feedback", component: <FeedbackPage /> });
+                                }}
+                            >
+                                Feedback
+                            </MenuItem>
+                        </Menu>
                         <IconButton
                             // sx={{ ml: 1 }}
                             onClick={colorMode.toggleColorMode}
@@ -78,7 +116,12 @@ export default function App() {
                             <Autocomplete
                                 disablePortal
                                 id="combo-box-demo"
-                                value={game === null ? null : game.label}
+                                value={
+                                    game === null ||
+                                    gameItems.filter((g) => g.label === game.label).length === 0
+                                        ? null
+                                        : game.label
+                                }
                                 onChange={(_event: unknown, newValue: string | null) => {
                                     // setGame(newValue);
                                     if (newValue === null || newValue === undefined) {
