@@ -42,6 +42,7 @@ const solvers: Solver[] = [
     { enabled: true, label: "row check" },
     { enabled: true, label: "col check" },
     { enabled: true, label: "box check" },
+    { enabled: true, label: "elimination" },
     { enabled: false, label: "backtrack" },
 ];
 
@@ -331,7 +332,6 @@ export function Sudoku() {
             }
             right={
                 <OptionsContainer>
-                    <h3>Options</h3>
                     <div>
                         <p>Steps taken: {sud.steps.length}</p>
                         <p>Last step:</p>
@@ -349,6 +349,7 @@ export function Sudoku() {
                         )}
                         {/* <p>check notes version</p> */}
                     </div>
+                    <h3>Options</h3>
                     <FormControlLabel
                         control={
                             <Switch

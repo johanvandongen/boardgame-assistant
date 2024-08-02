@@ -169,9 +169,29 @@ export abstract class SudokuSolver {
         return null;
     };
 
-    // private static lastPossibleNumberCheck() {
-    //     // ...
-    // }
+    private static lastPossibleNumberCheck(notes: Notes): Step | null {
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                const [row, col] = [r, c]; // make const so it is not possibly null after if statement ts
+                if (notes[row][col] === null || notes[row][col] === undefined) {
+                    continue;
+                }
+                if (notes[row][col].length === 1) {
+                    const step: Step = {
+                        state: "unsolved",
+                        row: row,
+                        col: col,
+                        value: notes[row][col][0],
+                        method: "elimination",
+                        backtrackValues: [],
+                        backtrackIdx: 0,
+                    };
+                    return step;
+                }
+            }
+        }
+        return null;
+    }
 
     private static getSolvers(solverOptions: Solver[]): ((notes: Notes) => Step | null)[] {
         const result: ((notes: Notes) => Step | null)[] = [];
@@ -193,6 +213,9 @@ export abstract class SudokuSolver {
                 case "box check":
                     result.push(SudokuSolver.boxCheck);
                     break;
+                case "elimination":
+                    result.push(SudokuSolver.lastPossibleNumberCheck);
+                    break;
                 case "backtrack":
                     result.push(SudokuSolver.bruteforceChoice);
                     break;
@@ -202,7 +225,6 @@ export abstract class SudokuSolver {
     }
 
     private static bruteforceChoice(notes: Notes): Step | null {
-        // console.log("backtracking!", SudokuSolver.getNextEmptyCell(notes));
         const emptyCell = SudokuSolver.getNextEmptyCell(notes);
         const r = emptyCell ? emptyCell[0] : -1;
         const c = emptyCell ? emptyCell[1] : -1;
@@ -222,18 +244,18 @@ export abstract class SudokuSolver {
         return null;
     }
 
-    public static addManualStep(row: number, col: number, value: number): Step {
-        const step: Step = {
-            state: "unknown",
-            row: row,
-            col: col,
-            value: value,
-            method: "",
-            backtrackValues: [],
-            backtrackIdx: 0,
-        };
-        return step;
-    }
+    // public static addManualStep(row: number, col: number, value: number): Step {
+    //     const step: Step = {
+    //         state: "unknown",
+    //         row: row,
+    //         col: col,
+    //         value: value,
+    //         method: "",
+    //         backtrackValues: [],
+    //         backtrackIdx: 0,
+    //     };
+    //     return step;
+    // }
 
     public static reset(grid: number[][], steps: Step[]): [Step[], number[][]] {
         let copyGrid = grid.map((r) => r.slice());
@@ -277,6 +299,7 @@ export abstract class SudokuSolver {
         return copyGrid;
     }
 
+    /** Check if grid is solvable. */
     public static isSolveable(grid: number[][], steps: Step[]): boolean {
         const copyGrid = grid.map((r) => r.slice());
         const copySteps: Step[] = steps.map((step) => ({
@@ -318,6 +341,7 @@ export abstract class SudokuSolver {
         return [newSteps, copyGrid];
     }
 
+    /** Check if backtrack step already exists in steps list where all options have been tried. */
     private static exhausted(steps: Step[], step: Step): boolean {
         for (const s of steps) {
             if (s.col === step.col && s.row === step.row) {
@@ -349,6 +373,7 @@ export abstract class SudokuSolver {
         }
 
         // Backtracking
+        // Backtrack never removes steps, so after options has failed a new step will be added on top.
         const lastStep = copySteps.slice(-1)[0];
         if (!SudokuChecker.isSolvable(notes) && lastStep !== undefined) {
             console.log("not a valid grid, backtrack");
