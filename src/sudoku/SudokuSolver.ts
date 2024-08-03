@@ -404,8 +404,11 @@ export abstract class SudokuSolver {
     }
 
     /** Check if backtrack step already exists in steps list where all options have been tried. */
-    private static exhausted(steps: Step[], step: Step): boolean {
-        for (const s of steps) {
+    private static exhausted(steps: Step[], step: Step, idx: number): boolean {
+        // start from -idx, because otherwise it can return true from previous branches while
+        // the current step is not exhausted in this backtracking branch
+        for (let i = steps.length - idx; i < steps.length; i++) {
+            const s = steps[i];
             if (s.col === step.col && s.row === step.row) {
                 if (s.backtrackIdx === s.backtrackValues.length - 1) {
                     return true;
@@ -440,6 +443,7 @@ export abstract class SudokuSolver {
         if (!SudokuChecker.isSolvable(notes) && lastStep !== undefined) {
             console.log("not a valid grid, backtrack");
             let idx = 1;
+            console.log(copySteps);
             while (copySteps.length - idx >= 0) {
                 const lastStep = copySteps[copySteps.length - idx];
                 // Dont backtrack manually filled in cells (return user feedback)
@@ -450,7 +454,7 @@ export abstract class SudokuSolver {
                 if (
                     lastStep.method === SolverMethod.BACKTRACK &&
                     lastStep.backtrackIdx < lastStep.backtrackValues.length - 1 &&
-                    !SudokuSolver.exhausted(copySteps, lastStep)
+                    !SudokuSolver.exhausted(copySteps, lastStep, idx)
                 ) {
                     const newstep: Step = {
                         ...lastStep,
