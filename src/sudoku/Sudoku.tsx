@@ -119,7 +119,7 @@ export function Sudoku() {
             addMessage("Cannot solve further due to unsolvable state", "warning");
         } else if (!SudokuSolver.isSolveable(sud.grid, sud.steps)) {
             addMessage("Sudoku is in unsolvable state", "error");
-        } else if (sud.forwardCheck && step === false) {
+        } else if (sud.forwardCheck && step === false && sud.forwardCheck) {
             addMessage("Cannot solve with applied solvers", "warning");
         } else if (step === true) {
             addMessage("Solved!", "success");
@@ -174,6 +174,7 @@ export function Sudoku() {
     const handleSolvers = (label: string) => {
         setSud((prev) => ({
             ...prev,
+            forwardCheck: false,
             options: prev.options.map((solver) =>
                 solver.label === label ? { ...solver, enabled: !solver.enabled } : solver
             ),
