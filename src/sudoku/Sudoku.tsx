@@ -19,7 +19,7 @@ import {
     useTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { Step, SudokuSolver } from "./SudokuSolver";
+import { SudokuSolver } from "./SudokuSolver";
 import { useEffect, useState } from "react";
 import {
     ArrowBack,
@@ -32,17 +32,16 @@ import { CenterSplitView } from "../reusable/CenterSplitView";
 import useSnackbar from "./useSnackbar";
 import React from "react";
 import { SudokuChecker } from "./SudokuChecker";
-
-export interface Solver {
-    enabled: boolean;
-    label: string;
-}
+import { Solver, SolverMethod, Step } from "./model";
 
 const solvers: Solver[] = [
-    { enabled: true, label: "row check" },
-    { enabled: true, label: "col check" },
-    { enabled: true, label: "box check" },
-    { enabled: false, label: "backtrack" },
+    { enabled: true, label: SolverMethod.ROW },
+    { enabled: true, label: SolverMethod.COL },
+    { enabled: true, label: SolverMethod.BOX },
+    { enabled: true, label: SolverMethod.ELIMINATION },
+    { enabled: false, label: SolverMethod.BOXBEAM },
+    { enabled: false, label: SolverMethod.HIDDENPAIR },
+    { enabled: false, label: SolverMethod.BACKTRACK },
 ];
 
 const grid = [
@@ -121,7 +120,7 @@ export function Sudoku() {
             addMessage("Cannot solve further due to unsolvable state", "warning");
         } else if (!SudokuSolver.isSolveable(sud.grid, sud.steps)) {
             addMessage("Sudoku is in unsolvable state", "error");
-        } else if (sud.forwardCheck && step === false) {
+        } else if (sud.forwardCheck && step === false && sud.forwardCheck) {
             addMessage("Cannot solve with applied solvers", "warning");
         } else if (step === true) {
             addMessage("Solved!", "success");
@@ -176,6 +175,7 @@ export function Sudoku() {
     const handleSolvers = (label: string) => {
         setSud((prev) => ({
             ...prev,
+            forwardCheck: false,
             options: prev.options.map((solver) =>
                 solver.label === label ? { ...solver, enabled: !solver.enabled } : solver
             ),
@@ -194,11 +194,10 @@ export function Sudoku() {
                     : row
             );
             const newStep: Step = {
-                state: "unknown",
                 row: currentCell[0],
                 col: currentCell[1],
                 value: num,
-                method: "manual",
+                method: SolverMethod.MANUAL,
                 backtrackValues: [],
                 backtrackIdx: 0,
             };
@@ -331,7 +330,6 @@ export function Sudoku() {
             }
             right={
                 <OptionsContainer>
-                    <h3>Options</h3>
                     <div>
                         <p>Steps taken: {sud.steps.length}</p>
                         <p>Last step:</p>
@@ -349,6 +347,7 @@ export function Sudoku() {
                         )}
                         {/* <p>check notes version</p> */}
                     </div>
+                    <h3>Options</h3>
                     <FormControlLabel
                         control={
                             <Switch
@@ -382,29 +381,18 @@ export function Sudoku() {
                                     />
                                 ))}
                                 <FormControlLabel
-                                    key={"Last remaining"}
+                                    key={"X wing"}
                                     control={
                                         <Checkbox
                                             sx={{ paddingTop: 0, paddingBottom: 0 }}
                                             disabled
                                         />
                                     }
-                                    label={"Last remaining"}
-                                />
-                                <FormControlLabel
-                                    key={"naked pair"}
-                                    control={
-                                        <Checkbox
-                                            sx={{ paddingTop: 0, paddingBottom: 0 }}
-                                            disabled
-                                        />
-                                    }
-                                    label={"naked pair"}
+                                    label={"X wing"}
                                 />
                             </FormGroup>
                         </AccordionDetails>
                     </Accordion>
-                    {/* <p>Solvers applied</p> */}
                 </OptionsContainer>
             }
         />

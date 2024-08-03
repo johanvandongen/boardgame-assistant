@@ -1,18 +1,5 @@
-import { Solver } from "./Sudoku";
+import { Notes, Solver, SolverMethod, Step } from "./model";
 import { SudokuChecker } from "./SudokuChecker";
-
-export type Notes = (null | number[])[][]; // 2d grid with: null if cell is occupied, list of possible options otherwise
-export type SudokuState = "solved" | "unsolved" | "unsolvable" | "invalid" | "unknown";
-
-export interface Step {
-    state: SudokuState;
-    row: number;
-    col: number;
-    value: number;
-    method: string;
-    backtrackValues: number[];
-    backtrackIdx: number;
-}
 
 export abstract class SudokuSolver {
     private static readonly boxes: [number, number][] = [
@@ -85,10 +72,9 @@ export abstract class SudokuSolver {
                     row: 0,
                     col: 0,
                     value: 0,
-                    method: "box",
+                    method: SolverMethod.BOX,
                     backtrackValues: [],
                     backtrackIdx: 0,
-                    state: "unsolved",
                 };
                 for (let r = box[0]; r < box[0] + 3; r++) {
                     for (let c = box[1]; c < box[1] + 3; c++) {
@@ -116,10 +102,9 @@ export abstract class SudokuSolver {
                 row: 0,
                 col: 0,
                 value: 0,
-                method: "row",
+                method: SolverMethod.ROW,
                 backtrackValues: [],
                 backtrackIdx: 0,
-                state: "unsolved",
             };
             for (let option = 1; option <= 9; option++) {
                 for (let c = 0; c < 9; c++) {
@@ -146,10 +131,9 @@ export abstract class SudokuSolver {
                 row: 0,
                 col: 0,
                 value: 0,
-                method: "col",
+                method: SolverMethod.COL,
                 backtrackValues: [],
                 backtrackIdx: 0,
-                state: "unsolved",
             };
             for (let option = 1; option <= 9; option++) {
                 for (let r = 0; r < 9; r++) {
@@ -169,9 +153,202 @@ export abstract class SudokuSolver {
         return null;
     };
 
-    // private static lastPossibleNumberCheck() {
-    //     // ...
-    // }
+    private static lastPossibleNumberCheck(notes: Notes): Step | null {
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                const options = notes[r][c];
+                if (options === null || options === undefined) {
+                    continue;
+                }
+                if (options.length === 1) {
+                    const step: Step = {
+                        row: r,
+                        col: c,
+                        value: options[0],
+                        method: SolverMethod.ELIMINATION,
+                        backtrackValues: [],
+                        backtrackIdx: 0,
+                    };
+                    return step;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static getBoxBeams(
+        notes: Notes
+    ): { val: number; cnt: number; box: [number, number]; row: number; col: number }[] {
+        const beams: {
+            val: number;
+            cnt: number;
+            box: [number, number];
+            row: number;
+            col: number;
+        }[] = [];
+        for (const box of SudokuSolver.boxes) {
+            for (let option = 1; option <= 9; option++) {
+                const beam = { val: option, box: box, cnt: 0, row: -1, col: -1 };
+                for (let r = box[0]; r < box[0] + 3; r++) {
+                    for (let c = box[1]; c < box[1] + 3; c++) {
+                        if (notes[r][c]?.includes(option)) {
+                            if (beam.cnt >= 1) {
+                                if (c !== beam.col) {
+                                    beam.col = -1;
+                                }
+                                if (r !== beam.row) {
+                                    beam.row = -1;
+                                }
+                            } else {
+                                beam.row = r;
+                                beam.col = c;
+                            }
+                            beam.cnt += 1;
+                        }
+                    }
+                }
+                if (beam.cnt >= 2 && (beam.row !== -1 || beam.col !== -1)) {
+                    beams.push(beam);
+                }
+            }
+        }
+        return beams;
+    }
+
+    public static boxbeamNotes(notes: Notes): Notes {
+        const notesCopy = SudokuSolver.deepCopyNotes(notes);
+        const beams = SudokuSolver.getBoxBeams(notes);
+        for (const beam of beams) {
+            let affectedBoxes = SudokuSolver.boxes.filter((box) => box !== beam.box);
+            if (beam.row !== -1) {
+                affectedBoxes = affectedBoxes.filter(
+                    (box) => beam.row >= box[0] && beam.row < box[0] + 3
+                );
+            }
+            if (beam.col !== -1) {
+                affectedBoxes = affectedBoxes.filter(
+                    (box) => beam.col >= box[1] && beam.col < box[1] + 3
+                );
+            }
+            for (const box of affectedBoxes) {
+                for (let r = box[0]; r < box[0] + 3; r++) {
+                    for (let c = box[1]; c < box[1] + 3; c++) {
+                        if (r === beam.row || c == beam.col) {
+                            notesCopy[r][c] =
+                                notesCopy[r][c]?.filter((val) => val !== beam.val) ?? null;
+                        }
+                    }
+                }
+            }
+        }
+        return notesCopy;
+    }
+
+    public static boxbeam(notes: Notes): Step | null {
+        const boxbeamNotes = SudokuSolver.boxbeamNotes(notes);
+        const solvers: ((notes: Notes) => Step | null)[] = [
+            SudokuSolver.rowCheck,
+            SudokuSolver.colCheck,
+            SudokuSolver.boxCheck,
+            SudokuSolver.lastPossibleNumberCheck,
+        ];
+        for (const solver of solvers) {
+            const step = solver(boxbeamNotes);
+            if (step !== null) {
+                step.method = SolverMethod.BOXBEAM;
+                return step;
+            }
+        }
+        return null;
+    }
+
+    private static arrayEqual(cells1: [number, number][], cells2: [number, number][]) {
+        if (cells1.length !== cells2.length) {
+            return false;
+        }
+
+        for (let k = 0; k < cells1.length; k++) {
+            if (cells1[k][0] !== cells2[k][0] || cells1[k][1] !== cells2[k][1]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static getNakedPairNotes(notes: Notes): Notes {
+        const notesCopy = SudokuSolver.deepCopyNotes(notes);
+        for (const box of SudokuSolver.boxes) {
+            // Get list of occupied cells for each option in this box
+            const cells: { val: number; cells: [number, number][] }[] = [];
+            for (let option = 1; option <= 9; option++) {
+                const pos: [number, number][] = [];
+                for (let r = box[0]; r < box[0] + 3; r++) {
+                    for (let c = box[1]; c < box[1] + 3; c++) {
+                        if (notes[r][c]?.includes(option)) {
+                            pos.push([r, c]);
+                        }
+                    }
+                }
+                if (pos.length > 1) {
+                    cells.push({ val: option, cells: pos });
+                }
+            }
+            // Get hidden pairs
+            let hiddenPairs: { vals: number[]; pos: [number, number][] }[] = [];
+            for (let i = 0; i < cells.length; i++) {
+                const hiddenpair: { vals: number[]; pos: [number, number][] } = {
+                    vals: [cells[i].val],
+                    pos: cells[i].cells,
+                };
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[i].val === cells[j].val) {
+                        continue;
+                    }
+                    if (SudokuSolver.arrayEqual(cells[i].cells, cells[j].cells)) {
+                        hiddenpair.vals.push(cells[j].val);
+                    }
+                }
+                if (hiddenpair.vals.length > 1) {
+                    hiddenPairs.push(hiddenpair);
+                }
+            }
+            hiddenPairs = hiddenPairs.filter((pair) => pair.pos.length === pair.vals.length);
+
+            //Update notes
+            for (const pair of hiddenPairs) {
+                for (const pos of pair.pos) {
+                    const options = notesCopy[pos[0]][pos[1]];
+                    if (options === null) {
+                        continue;
+                    }
+                    notesCopy[pos[0]][pos[1]] = options.filter((val) => pair.vals.includes(val));
+                }
+            }
+        }
+        return notesCopy;
+    }
+
+    public static hiddenPair(notes: Notes): Step | null {
+        const hiddenPairNotes = SudokuSolver.getNakedPairNotes(notes);
+        const solvers: ((notes: Notes) => Step | null)[] = [
+            SudokuSolver.rowCheck,
+            SudokuSolver.colCheck,
+            SudokuSolver.boxCheck,
+            SudokuSolver.lastPossibleNumberCheck,
+        ];
+        for (const solver of solvers) {
+            const step = solver(hiddenPairNotes);
+            if (step !== null) {
+                step.method = SolverMethod.HIDDENPAIR;
+                return step;
+            }
+        }
+        return null;
+    }
+
+    private static deepCopyNotes(notes: Notes): Notes {
+        return notes.map((row) => row.map((col) => (col === null ? null : [...col])));
+    }
 
     private static getSolvers(solverOptions: Solver[]): ((notes: Notes) => Step | null)[] {
         const result: ((notes: Notes) => Step | null)[] = [];
@@ -184,16 +361,25 @@ export abstract class SudokuSolver {
             }
 
             switch (solver.label) {
-                case "row check":
+                case SolverMethod.ROW:
                     result.push(SudokuSolver.rowCheck);
                     break;
-                case "col check":
+                case SolverMethod.COL:
                     result.push(SudokuSolver.colCheck);
                     break;
-                case "box check":
+                case SolverMethod.BOX:
                     result.push(SudokuSolver.boxCheck);
                     break;
-                case "backtrack":
+                case SolverMethod.ELIMINATION:
+                    result.push(SudokuSolver.lastPossibleNumberCheck);
+                    break;
+                case SolverMethod.BOXBEAM:
+                    result.push(SudokuSolver.boxbeam);
+                    break;
+                case SolverMethod.HIDDENPAIR:
+                    result.push(SudokuSolver.hiddenPair);
+                    break;
+                case SolverMethod.BACKTRACK:
                     result.push(SudokuSolver.bruteforceChoice);
                     break;
             }
@@ -202,7 +388,6 @@ export abstract class SudokuSolver {
     }
 
     private static bruteforceChoice(notes: Notes): Step | null {
-        // console.log("backtracking!", SudokuSolver.getNextEmptyCell(notes));
         const emptyCell = SudokuSolver.getNextEmptyCell(notes);
         const r = emptyCell ? emptyCell[0] : -1;
         const c = emptyCell ? emptyCell[1] : -1;
@@ -212,27 +397,13 @@ export abstract class SudokuSolver {
                 row: r,
                 col: c,
                 value: cellNotes[0],
-                method: "backtrack",
+                method: SolverMethod.BACKTRACK,
                 backtrackValues: cellNotes,
                 backtrackIdx: 0,
-                state: "unsolved",
             };
             return step;
         }
         return null;
-    }
-
-    public static addManualStep(row: number, col: number, value: number): Step {
-        const step: Step = {
-            state: "unknown",
-            row: row,
-            col: col,
-            value: value,
-            method: "",
-            backtrackValues: [],
-            backtrackIdx: 0,
-        };
-        return step;
     }
 
     public static reset(grid: number[][], steps: Step[]): [Step[], number[][]] {
@@ -246,7 +417,7 @@ export abstract class SudokuSolver {
             const step = copySteps.pop();
             if (step === undefined) {
                 return [copySteps, copyGrid];
-            } else if (step.method === "manual") {
+            } else if (step.method === SolverMethod.MANUAL) {
                 copyGrid[step.row][step.col] = step.value;
                 return [[...copySteps, step], copyGrid];
             }
@@ -265,7 +436,7 @@ export abstract class SudokuSolver {
             ...step,
             backtrackValues: [...step.backtrackValues],
         }));
-        if (lastStep.method === "manual" && lastStep.value === 0) {
+        if (lastStep.method === SolverMethod.MANUAL && lastStep.value === 0) {
             const val = copySteps
                 .slice(0, -1)
                 .reverse()
@@ -277,6 +448,7 @@ export abstract class SudokuSolver {
         return copyGrid;
     }
 
+    /** Check if grid is solvable. */
     public static isSolveable(grid: number[][], steps: Step[]): boolean {
         const copyGrid = grid.map((r) => r.slice());
         const copySteps: Step[] = steps.map((step) => ({
@@ -284,7 +456,7 @@ export abstract class SudokuSolver {
             backtrackValues: [...step.backtrackValues],
         }));
         const newGrid = SudokuSolver.solve(copyGrid, copySteps, [
-            { enabled: true, label: "backtrack" },
+            { enabled: true, label: SolverMethod.BACKTRACK },
         ])[1];
         return SudokuChecker.isSolved(newGrid);
     }
@@ -318,8 +490,12 @@ export abstract class SudokuSolver {
         return [newSteps, copyGrid];
     }
 
-    private static exhausted(steps: Step[], step: Step): boolean {
-        for (const s of steps) {
+    /** Check if backtrack step already exists in steps list where all options have been tried. */
+    private static exhausted(steps: Step[], step: Step, idx: number): boolean {
+        // start from -idx, because otherwise it can return true from previous branches while
+        // the current step is not exhausted in this backtracking branch
+        for (let i = steps.length - idx; i < steps.length; i++) {
+            const s = steps[i];
             if (s.col === step.col && s.row === step.row) {
                 if (s.backtrackIdx === s.backtrackValues.length - 1) {
                     return true;
@@ -344,26 +520,28 @@ export abstract class SudokuSolver {
 
         // Grid already solved
         if (SudokuChecker.isSolved(grid)) {
-            console.log("solved", SudokuChecker.isValid(grid), steps.length);
+            // console.log("solved", SudokuChecker.isValid(grid), steps.length);
             return [true, copyGrid];
         }
 
         // Backtracking
+        // Backtrack never removes steps, so after options has failed a new step will be added on top.
         const lastStep = copySteps.slice(-1)[0];
         if (!SudokuChecker.isSolvable(notes) && lastStep !== undefined) {
             console.log("not a valid grid, backtrack");
             let idx = 1;
+            console.log(copySteps);
             while (copySteps.length - idx >= 0) {
                 const lastStep = copySteps[copySteps.length - idx];
                 // Dont backtrack manually filled in cells (return user feedback)
-                if (lastStep.method === "manual") {
+                if (lastStep.method === SolverMethod.MANUAL) {
                     return [false, copyGrid];
                 }
 
                 if (
-                    lastStep.method === "backtrack" &&
+                    lastStep.method === SolverMethod.BACKTRACK &&
                     lastStep.backtrackIdx < lastStep.backtrackValues.length - 1 &&
-                    !SudokuSolver.exhausted(copySteps, lastStep)
+                    !SudokuSolver.exhausted(copySteps, lastStep, idx)
                 ) {
                     const newstep: Step = {
                         ...lastStep,
