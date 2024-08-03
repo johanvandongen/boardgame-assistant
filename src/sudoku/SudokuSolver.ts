@@ -262,6 +262,90 @@ export abstract class SudokuSolver {
         return null;
     }
 
+    private static arrayEqual(cells1: [number, number][], cells2: [number, number][]) {
+        if (cells1.length !== cells2.length) {
+            return false;
+        }
+
+        for (let k = 0; k < cells1.length; k++) {
+            if (cells1[k][0] !== cells2[k][0] || cells1[k][1] !== cells2[k][1]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static getNakedPairNotes(notes: Notes): Notes {
+        const notesCopy = SudokuSolver.deepCopyNotes(notes);
+        for (const box of SudokuSolver.boxes) {
+            // Get list of occupied cells for each option in this box
+            const cells: { val: number; cells: [number, number][] }[] = [];
+            for (let option = 1; option <= 9; option++) {
+                const pos: [number, number][] = [];
+                for (let r = box[0]; r < box[0] + 3; r++) {
+                    for (let c = box[1]; c < box[1] + 3; c++) {
+                        if (notes[r][c]?.includes(option)) {
+                            pos.push([r, c]);
+                        }
+                    }
+                }
+                if (pos.length > 1) {
+                    cells.push({ val: option, cells: pos });
+                }
+            }
+            // Get hidden pairs
+            let hiddenPairs: { vals: number[]; pos: [number, number][] }[] = [];
+            for (let i = 0; i < cells.length; i++) {
+                const hiddenpair: { vals: number[]; pos: [number, number][] } = {
+                    vals: [cells[i].val],
+                    pos: cells[i].cells,
+                };
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[i].val === cells[j].val) {
+                        continue;
+                    }
+                    if (SudokuSolver.arrayEqual(cells[i].cells, cells[j].cells)) {
+                        hiddenpair.vals.push(cells[j].val);
+                    }
+                }
+                if (hiddenpair.vals.length > 1) {
+                    hiddenPairs.push(hiddenpair);
+                }
+            }
+            hiddenPairs = hiddenPairs.filter((pair) => pair.pos.length === pair.vals.length);
+
+            //Update notes
+            for (const pair of hiddenPairs) {
+                for (const pos of pair.pos) {
+                    const [r, c] = [pos[0], pos[1]];
+                    if (notesCopy[r][c] === null) {
+                        continue;
+                    }
+                    notesCopy[r][c] = notesCopy[r][c].filter((val) => pair.vals.includes(val));
+                }
+            }
+        }
+        return notesCopy;
+    }
+
+    public static hiddenPair(notes: Notes): Step | null {
+        const hiddenPairNotes = SudokuSolver.getNakedPairNotes(notes);
+        const solvers: ((notes: Notes) => Step | null)[] = [
+            SudokuSolver.rowCheck,
+            SudokuSolver.colCheck,
+            SudokuSolver.boxCheck,
+            SudokuSolver.lastPossibleNumberCheck,
+        ];
+        for (const solver of solvers) {
+            const step = solver(hiddenPairNotes);
+            if (step !== null) {
+                step.method = SolverMethod.HIDDENPAIR;
+                return step;
+            }
+        }
+        return null;
+    }
+
     private static deepCopyNotes(notes: Notes): Notes {
         return notes.map((row) => row.map((col) => (col === null ? null : [...col])));
     }
@@ -291,6 +375,9 @@ export abstract class SudokuSolver {
                     break;
                 case SolverMethod.BOXBEAM:
                     result.push(SudokuSolver.boxbeam);
+                    break;
+                case SolverMethod.HIDDENPAIR:
+                    result.push(SudokuSolver.hiddenPair);
                     break;
                 case SolverMethod.BACKTRACK:
                     result.push(SudokuSolver.bruteforceChoice);
@@ -433,7 +520,7 @@ export abstract class SudokuSolver {
 
         // Grid already solved
         if (SudokuChecker.isSolved(grid)) {
-            console.log("solved", SudokuChecker.isValid(grid), steps.length);
+            // console.log("solved", SudokuChecker.isValid(grid), steps.length);
             return [true, copyGrid];
         }
 

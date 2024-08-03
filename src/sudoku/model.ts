@@ -9,6 +9,7 @@ export const enum SolverMethod {
     BOX = "box",
     ELIMINATION = "elimination",
     BOXBEAM = "box beam",
+    HIDDENPAIR = "hidden pair",
     BACKTRACK = "backtrack",
     MANUAL = "manual",
 }

@@ -39,7 +39,8 @@ const solvers: Solver[] = [
     { enabled: true, label: SolverMethod.COL },
     { enabled: true, label: SolverMethod.BOX },
     { enabled: true, label: SolverMethod.ELIMINATION },
-    { enabled: true, label: SolverMethod.BOXBEAM },
+    { enabled: false, label: SolverMethod.BOXBEAM },
+    { enabled: false, label: SolverMethod.HIDDENPAIR },
     { enabled: false, label: SolverMethod.BACKTRACK },
 ];
 
@@ -380,29 +381,18 @@ export function Sudoku() {
                                     />
                                 ))}
                                 <FormControlLabel
-                                    key={"Last remaining"}
+                                    key={"X wing"}
                                     control={
                                         <Checkbox
                                             sx={{ paddingTop: 0, paddingBottom: 0 }}
                                             disabled
                                         />
                                     }
-                                    label={"Last remaining"}
-                                />
-                                <FormControlLabel
-                                    key={"naked pair"}
-                                    control={
-                                        <Checkbox
-                                            sx={{ paddingTop: 0, paddingBottom: 0 }}
-                                            disabled
-                                        />
-                                    }
-                                    label={"naked pair"}
+                                    label={"X wing"}
                                 />
                             </FormGroup>
                         </AccordionDetails>
                     </Accordion>
-                    {/* <p>Solvers applied</p> */}
                 </OptionsContainer>
             }
         />
