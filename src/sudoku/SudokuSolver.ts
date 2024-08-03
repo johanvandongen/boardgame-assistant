@@ -156,15 +156,15 @@ export abstract class SudokuSolver {
     private static lastPossibleNumberCheck(notes: Notes): Step | null {
         for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 9; c++) {
-                const [row, col] = [r, c]; // make const so it is not possibly null after if statement ts
-                if (notes[row][col] === null || notes[row][col] === undefined) {
+                const options = notes[r][c];
+                if (options === null || options === undefined) {
                     continue;
                 }
-                if (notes[row][col].length === 1) {
+                if (options.length === 1) {
                     const step: Step = {
-                        row: row,
-                        col: col,
-                        value: notes[row][col][0],
+                        row: r,
+                        col: c,
+                        value: options[0],
                         method: SolverMethod.ELIMINATION,
                         backtrackValues: [],
                         backtrackIdx: 0,
@@ -317,11 +317,11 @@ export abstract class SudokuSolver {
             //Update notes
             for (const pair of hiddenPairs) {
                 for (const pos of pair.pos) {
-                    const [r, c] = [pos[0], pos[1]];
-                    if (notesCopy[r][c] === null) {
+                    const options = notesCopy[pos[0]][pos[1]];
+                    if (options === null) {
                         continue;
                     }
-                    notesCopy[r][c] = notesCopy[r][c].filter((val) => pair.vals.includes(val));
+                    notesCopy[pos[0]][pos[1]] = options.filter((val) => pair.vals.includes(val));
                 }
             }
         }
