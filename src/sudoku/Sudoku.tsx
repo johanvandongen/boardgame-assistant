@@ -39,6 +39,7 @@ const solvers: Solver[] = [
     { enabled: true, label: SolverMethod.COL },
     { enabled: true, label: SolverMethod.BOX },
     { enabled: true, label: SolverMethod.ELIMINATION },
+    { enabled: true, label: SolverMethod.BOXBEAM },
     { enabled: false, label: SolverMethod.BACKTRACK },
 ];
 

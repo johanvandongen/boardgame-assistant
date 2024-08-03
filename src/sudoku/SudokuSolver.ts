@@ -176,6 +176,96 @@ export abstract class SudokuSolver {
         return null;
     }
 
+    private static getBoxBeams(
+        notes: Notes
+    ): { val: number; cnt: number; box: [number, number]; row: number; col: number }[] {
+        const beams: {
+            val: number;
+            cnt: number;
+            box: [number, number];
+            row: number;
+            col: number;
+        }[] = [];
+        for (const box of SudokuSolver.boxes) {
+            for (let option = 1; option <= 9; option++) {
+                const beam = { val: option, box: box, cnt: 0, row: -1, col: -1 };
+                for (let r = box[0]; r < box[0] + 3; r++) {
+                    for (let c = box[1]; c < box[1] + 3; c++) {
+                        if (notes[r][c]?.includes(option)) {
+                            if (beam.cnt >= 1) {
+                                if (c !== beam.col) {
+                                    beam.col = -1;
+                                }
+                                if (r !== beam.row) {
+                                    beam.row = -1;
+                                }
+                            } else {
+                                beam.row = r;
+                                beam.col = c;
+                            }
+                            beam.cnt += 1;
+                        }
+                    }
+                }
+                if (beam.cnt >= 2 && (beam.row !== -1 || beam.col !== -1)) {
+                    beams.push(beam);
+                }
+            }
+        }
+        return beams;
+    }
+
+    public static boxbeamNotes(notes: Notes): Notes {
+        const notesCopy = SudokuSolver.deepCopyNotes(notes);
+        const beams = SudokuSolver.getBoxBeams(notes);
+        for (const beam of beams) {
+            let affectedBoxes = SudokuSolver.boxes.filter((box) => box !== beam.box);
+            if (beam.row !== -1) {
+                affectedBoxes = affectedBoxes.filter(
+                    (box) => beam.row >= box[0] && beam.row < box[0] + 3
+                );
+            }
+            if (beam.col !== -1) {
+                affectedBoxes = affectedBoxes.filter(
+                    (box) => beam.col >= box[1] && beam.col < box[1] + 3
+                );
+            }
+            for (const box of affectedBoxes) {
+                for (let r = box[0]; r < box[0] + 3; r++) {
+                    for (let c = box[1]; c < box[1] + 3; c++) {
+                        if (r === beam.row || c == beam.col) {
+                            notesCopy[r][c] =
+                                notesCopy[r][c]?.filter((val) => val !== beam.val) ?? null;
+                        }
+                    }
+                }
+            }
+        }
+        return notesCopy;
+    }
+
+    public static boxbeam(notes: Notes): Step | null {
+        const boxbeamNotes = SudokuSolver.boxbeamNotes(notes);
+        const solvers: ((notes: Notes) => Step | null)[] = [
+            SudokuSolver.rowCheck,
+            SudokuSolver.colCheck,
+            SudokuSolver.boxCheck,
+            SudokuSolver.lastPossibleNumberCheck,
+        ];
+        for (const solver of solvers) {
+            const step = solver(boxbeamNotes);
+            if (step !== null) {
+                step.method = SolverMethod.BOXBEAM;
+                return step;
+            }
+        }
+        return null;
+    }
+
+    private static deepCopyNotes(notes: Notes): Notes {
+        return notes.map((row) => row.map((col) => (col === null ? null : [...col])));
+    }
+
     private static getSolvers(solverOptions: Solver[]): ((notes: Notes) => Step | null)[] {
         const result: ((notes: Notes) => Step | null)[] = [];
         if (solverOptions === undefined) {
@@ -198,6 +288,9 @@ export abstract class SudokuSolver {
                     break;
                 case SolverMethod.ELIMINATION:
                     result.push(SudokuSolver.lastPossibleNumberCheck);
+                    break;
+                case SolverMethod.BOXBEAM:
+                    result.push(SudokuSolver.boxbeam);
                     break;
                 case SolverMethod.BACKTRACK:
                     result.push(SudokuSolver.bruteforceChoice);
